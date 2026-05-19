@@ -7,11 +7,20 @@ import { useEffect, useState } from "react";
 import { Particles } from "@/components/effects/Particles";
 import { GlowEffect } from "@/components/effects/GlowEffect";
 import { ARC_CHAIN_ID } from "@/lib/arcChain";
-import Image from "next/image";
 
 const wallets = [
-  { id: "metaMask", name: "MetaMask", description: "Browser extension wallet", icon: "/metamask.svg" },
-  { id: "zerion", name: "Zerion", description: "Smart wallet for DeFi", icon: "/zerion.svg" },
+  {
+    id: "metaMask",
+    name: "MetaMask",
+    description: "Popular browser extension wallet",
+    icon: "https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg",
+  },
+  {
+    id: "zerion",
+    name: "Zerion",
+    description: "Smart wallet for DeFi",
+    icon: "https://assets.zerion.io/v3/assets/zerion-logo-icon.svg",
+  },
 ];
 
 export default function LoginPage() {
@@ -33,13 +42,35 @@ export default function LoginPage() {
 
   const handleConnect = (walletId: string) => {
     setConnectingWallet(walletId);
-    const connector = connectors.find(
-      (c) => c.id === walletId || c.name.toLowerCase().includes(walletId.toLowerCase())
-    );
+
+    // Try to find the matching connector
+    const connector = connectors.find((c) => {
+      const name = c.name.toLowerCase();
+      const id = c.id.toLowerCase();
+      const target = walletId.toLowerCase();
+      return id.includes(target) || name.includes(target);
+    });
+
     if (connector) {
-      connect({ connector });
-    } else if (connectors[0]) {
-      connect({ connector: connectors[0] });
+      connect(
+        { connector },
+        {
+          onError: () => setConnectingWallet(null),
+          onSuccess: () => setConnectingWallet(null),
+        }
+      );
+    } else {
+      // Use the first injected connector as fallback
+      const fallback = connectors.find((c) => c.type === "injected") || connectors[0];
+      if (fallback) {
+        connect(
+          { connector: fallback },
+          {
+            onError: () => setConnectingWallet(null),
+            onSuccess: () => setConnectingWallet(null),
+          }
+        );
+      }
     }
   };
 
@@ -58,7 +89,7 @@ export default function LoginPage() {
       {/* Subtle grid overlay */}
       <div className="absolute inset-0 opacity-[0.015]" style={{
         backgroundImage: "linear-gradient(rgba(196,169,122,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(196,169,122,0.3) 1px, transparent 1px)",
-        backgroundSize: "60px 60px"
+        backgroundSize: "60px 60px",
       }} />
 
       {/* Login Card */}
@@ -84,14 +115,13 @@ export default function LoginPage() {
             </span>
           </motion.div>
 
-          {/* Tagline — THE boldest element */}
+          {/* Tagline */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="text-center mb-3 relative"
           >
-            {/* Animated glow behind tagline */}
             <motion.div
               className="absolute inset-0 -inset-x-8 -inset-y-4"
               style={{ background: "radial-gradient(ellipse at center, rgba(196,169,122,0.15) 0%, transparent 65%)", filter: "blur(20px)" }}
@@ -137,9 +167,26 @@ export default function LoginPage() {
                 disabled={isPending}
                 className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-accent-gold/20 hover:bg-[var(--bg-card-hover)] transition-all duration-300 disabled:opacity-40 group"
               >
-                <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-105 bg-white flex items-center justify-center shadow-sm">
-                  <Image src={wallet.icon} alt={wallet.name} width={44} height={44} className="w-full h-full object-contain" />
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={wallet.icon}
+                  alt={wallet.name}
+                  width={44}
+                  height={44}
+                  className="w-11 h-11 rounded-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    // Fallback to initials if CDN image fails
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const fallback = document.createElement("div");
+                      fallback.className = "w-11 h-11 rounded-xl bg-gradient-to-br from-accent-gold/20 to-accent-warm/20 flex items-center justify-center flex-shrink-0";
+                      fallback.innerHTML = `<span class="text-lg font-bold text-accent-gold">${wallet.name[0]}</span>`;
+                      parent.insertBefore(fallback, target);
+                    }
+                  }}
+                />
                 <div className="flex-1 text-left">
                   <p className="font-semibold text-[var(--text-primary)] text-[14px] leading-tight">
                     {wallet.name}
@@ -170,12 +217,14 @@ export default function LoginPage() {
                 initial={{ opacity: 0, y: -5, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -5, height: 0 }}
-                className="mt-4 px-3 py-2 rounded-xl bg-red-500/5 border border-red-500/10"
+                className="mt-4 px-3 py-2.5 rounded-xl bg-red-500/5 border border-red-500/10"
               >
                 <p className="text-[11px] text-red-400 text-center">
                   {error.message.includes("rejected")
                     ? "Connection declined — please try again"
-                    : "Unable to connect — check your wallet extension"}
+                    : error.message.includes("not found")
+                    ? "Wallet not detected — please install the extension"
+                    : "Connection interrupted — please retry"}
                 </p>
               </motion.div>
             )}
