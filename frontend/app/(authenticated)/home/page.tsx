@@ -1,17 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount } from "wagmi";
 import { PageTransition } from "@/components/effects/PageTransition";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { AnimatedCounter } from "@/components/ui/Counter";
 import { Button } from "@/components/ui/Button";
-import { USDC_ADDRESS } from "@/lib/contracts";
+import { useUSDCBalance } from "@/lib/useUSDCBalance";
 import { truncateAddress } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/animations/variants";
 import {
   CircleDot, Spade, Cherry, TrendingUp, Gift, Zap,
-  Wallet, Clock, ArrowRight
+  Wallet, ArrowRight, RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 
@@ -24,12 +24,7 @@ const quickGames = [
 
 export default function HomePage() {
   const { address } = useAccount();
-  const { data: usdcBalance } = useBalance({
-    address,
-    token: USDC_ADDRESS,
-    query: { refetchInterval: 5000 },
-  });
-  const balance = usdcBalance ? Number(usdcBalance.formatted) : 0;
+  const { value: balance, formatted, isLoading, isPending, refetch } = useUSDCBalance();
 
   return (
     <PageTransition>
@@ -61,18 +56,25 @@ export default function HomePage() {
         {/* Wallet Balance Card */}
         <motion.div variants={staggerItem}>
           <Card className="p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-accent-gold/5 to-transparent rounded-bl-full" />
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-accent-gold/5 to-transparent rounded-bl-full pointer-events-none" />
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Wallet className="w-3.5 h-3.5" /> Wallet Balance
+                  {isPending && (
+                    <RefreshCw className="w-3 h-3 text-accent-gold animate-spin" />
+                  )}
                 </p>
-                <AnimatedCounter
-                  value={balance}
-                  prefix="$"
-                  decimals={2}
-                  className="text-3xl font-bold font-display text-[var(--text-primary)]"
-                />
+                {isLoading ? (
+                  <div className="h-9 w-32 rounded-lg bg-[var(--bg-card)] animate-pulse" />
+                ) : (
+                  <AnimatedCounter
+                    value={balance}
+                    prefix="$"
+                    decimals={2}
+                    className="text-3xl font-bold font-display text-[var(--text-primary)]"
+                  />
+                )}
                 <p className="text-xs text-[var(--text-muted)] mt-1">USDC on Arc Testnet</p>
               </div>
               <div className="flex flex-col gap-2">
@@ -85,9 +87,15 @@ export default function HomePage() {
                     Fund Wallet <ArrowRight className="w-3 h-3" />
                   </Button>
                 </a>
+                <button
+                  onClick={() => refetch()}
+                  className="text-xs text-[var(--text-muted)] hover:text-accent-gold transition-colors flex items-center gap-1 justify-center"
+                >
+                  <RefreshCw className="w-3 h-3" /> Refresh
+                </button>
               </div>
             </div>
-            {balance === 0 && (
+            {!isLoading && balance === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}

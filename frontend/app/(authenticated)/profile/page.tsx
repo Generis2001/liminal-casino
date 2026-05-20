@@ -1,22 +1,22 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useAccount, useBalance, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { PageTransition } from "@/components/effects/PageTransition";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { AnimatedCounter } from "@/components/ui/Counter";
 import { staggerContainer, staggerItem } from "@/animations/variants";
-import { USDC_ADDRESS } from "@/lib/contracts";
 import { truncateAddress } from "@/lib/utils";
+import { useUSDCBalance } from "@/lib/useUSDCBalance";
 import { User, Copy, ExternalLink, Trophy, Flame, Target, LogOut } from "lucide-react";
 import { useState } from "react";
 
 export default function ProfilePage() {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
-  const { data: usdcBalance } = useBalance({ address, token: USDC_ADDRESS });
+  const { value: usdcBalanceValue } = useUSDCBalance();
   const [copied, setCopied] = useState(false);
 
   const copyAddress = () => {
@@ -74,7 +74,7 @@ export default function ProfilePage() {
           </Card>
           <Card className="p-5 text-center" hover={false}>
             <p className="text-xs text-[var(--text-muted)]">Balance</p>
-            <AnimatedCounter value={usdcBalance ? Number(usdcBalance.formatted) : 0} prefix="$" decimals={2} className="text-2xl font-bold font-display text-[var(--text-primary)]" />
+            <AnimatedCounter value={usdcBalanceValue} prefix="$" decimals={2} className="text-2xl font-bold font-display text-[var(--text-primary)]" />
             <p className="text-xs text-[var(--text-muted)]">USDC</p>
           </Card>
         </motion.div>
