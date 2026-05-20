@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useAccount, useDisconnect, useBalance } from "wagmi";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { truncateAddress, formatUSDC } from "@/lib/utils";
+import { truncateAddress } from "@/lib/utils";
 import { USDC_ADDRESS } from "@/lib/contracts";
 import { AnimatedCounter } from "@/components/ui/Counter";
 import { Menu, LogOut, ExternalLink } from "lucide-react";
@@ -18,6 +18,7 @@ export function Navbar() {
   const { data: usdcBalance } = useBalance({
     address,
     token: USDC_ADDRESS,
+    query: { refetchInterval: 5000 },
   });
 
   const balance = usdcBalance ? Number(usdcBalance.formatted) : 0;
@@ -25,15 +26,12 @@ export function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 z-40 glass border-b border-[var(--border-color)]">
       <div className="h-full flex items-center justify-between px-4 md:px-6">
-        {/* Left: Arc Logo + Liminal */}
+        {/* Left: Liminal Logo + Nav */}
         <div className="flex items-center gap-3">
-          {/* Arc Logo */}
           <Link href="/home" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M12 2L2 19h20L12 2z" />
-              </svg>
-            </div>
+            {/* Liminal L logo */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/liminal-logo.svg" alt="Liminal" className="w-8 h-8" />
             <span className="font-display font-bold text-lg text-[var(--text-primary)] hidden md:block group-hover:text-accent-gold transition-colors">
               Liminal
             </span>

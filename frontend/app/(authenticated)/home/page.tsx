@@ -6,34 +6,29 @@ import { PageTransition } from "@/components/effects/PageTransition";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { AnimatedCounter } from "@/components/ui/Counter";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { USDC_ADDRESS } from "@/lib/contracts";
 import { truncateAddress } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/animations/variants";
 import {
   CircleDot, Spade, Cherry, TrendingUp, Gift, Zap,
-  ArrowUpRight, Trophy, Flame, Clock
+  Wallet, Clock, ArrowRight
 } from "lucide-react";
 import Link from "next/link";
 
 const quickGames = [
-  { href: "/roulette", name: "Roulette", icon: CircleDot, color: "from-red-500/20 to-orange-500/20", players: 234 },
-  { href: "/blackjack", name: "Blackjack", icon: Spade, color: "from-emerald-500/20 to-teal-500/20", players: 182 },
-  { href: "/slots", name: "Slots", icon: Cherry, color: "from-purple-500/20 to-pink-500/20", players: 567 },
-  { href: "/predictions", name: "Predictions", icon: TrendingUp, color: "from-blue-500/20 to-indigo-500/20", players: 89 },
-];
-
-const recentActivity = [
-  { player: "0x8a3f...c2d1", game: "Roulette", result: "Won", amount: 250, time: "2m ago" },
-  { player: "0x1b7e...9f4a", game: "Slots", result: "Won", amount: 1200, time: "5m ago" },
-  { player: "0x4c2d...a8e3", game: "Blackjack", result: "Lost", amount: 50, time: "8m ago" },
-  { player: "0x9f1a...b3c7", game: "Roulette", result: "Won", amount: 75, time: "12m ago" },
-  { player: "0x2e8b...d5f2", game: "Prediction", result: "Won", amount: 500, time: "15m ago" },
+  { href: "/roulette", name: "Roulette", icon: CircleDot, color: "from-red-500/20 to-orange-500/20", description: "Spin the wheel" },
+  { href: "/blackjack", name: "Blackjack", icon: Spade, color: "from-emerald-500/20 to-teal-500/20", description: "Beat the dealer" },
+  { href: "/slots", name: "Slots", icon: Cherry, color: "from-purple-500/20 to-pink-500/20", description: "Match symbols" },
+  { href: "/predictions", name: "Predictions", icon: TrendingUp, color: "from-blue-500/20 to-indigo-500/20", description: "Call the market" },
 ];
 
 export default function HomePage() {
   const { address } = useAccount();
-  const { data: usdcBalance } = useBalance({ address, token: USDC_ADDRESS });
+  const { data: usdcBalance } = useBalance({
+    address,
+    token: USDC_ADDRESS,
+    query: { refetchInterval: 5000 },
+  });
   const balance = usdcBalance ? Number(usdcBalance.formatted) : 0;
 
   return (
@@ -63,33 +58,47 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-        {/* Stats Row */}
-        <motion.div variants={staggerItem} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-5">
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Balance</p>
-            <AnimatedCounter value={balance} prefix="$" decimals={2} className="text-2xl font-bold font-display text-[var(--text-primary)]" />
-            <p className="text-xs text-[var(--text-muted)] mt-1">USDC</p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Total Won</p>
-            <AnimatedCounter value={4250} prefix="$" decimals={0} className="text-2xl font-bold font-display text-emerald-400" />
-            <p className="text-xs text-emerald-400/60 mt-1 flex items-center gap-1"><ArrowUpRight className="w-3 h-3" /> +12.5%</p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Win Streak</p>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold font-display text-accent-gold">7</span>
-              <Flame className="w-5 h-5 text-orange-400" />
+        {/* Wallet Balance Card */}
+        <motion.div variants={staggerItem}>
+          <Card className="p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-accent-gold/5 to-transparent rounded-bl-full" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <Wallet className="w-3.5 h-3.5" /> Wallet Balance
+                </p>
+                <AnimatedCounter
+                  value={balance}
+                  prefix="$"
+                  decimals={2}
+                  className="text-3xl font-bold font-display text-[var(--text-primary)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">USDC on Arc Testnet</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="https://faucet.circle.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="secondary" size="sm">
+                    Fund Wallet <ArrowRight className="w-3 h-3" />
+                  </Button>
+                </a>
+              </div>
             </div>
-            <p className="text-xs text-[var(--text-muted)] mt-1">Personal best: 12</p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">VIP Tier</p>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold font-display text-accent-gold">Gold</span>
-              <Trophy className="w-5 h-5 text-yellow-400" />
-            </div>
-            <p className="text-xs text-[var(--text-muted)] mt-1">5,240 / 25,000 XP</p>
+            {balance === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-4 p-3 rounded-xl bg-accent-gold/5 border border-accent-gold/10"
+              >
+                <p className="text-xs text-accent-gold">
+                  💡 Your balance is empty. Visit the Circle Faucet to get free testnet USDC, then start playing!
+                </p>
+              </motion.div>
+            )}
           </Card>
         </motion.div>
 
@@ -104,21 +113,24 @@ export default function HomePage() {
                     <game.icon className="w-6 h-6 text-[var(--text-primary)]" />
                   </div>
                   <h3 className="font-semibold text-sm text-[var(--text-primary)]">{game.name}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">{game.players} playing</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{game.description}</p>
                 </Card>
               </Link>
             ))}
           </div>
         </motion.div>
 
-        {/* Recent Activity */}
+        {/* Getting Started */}
         <motion.div variants={staggerItem}>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <Link href="/live" className="text-xs text-accent-gold hover:underline">View all</Link>
+            <CardTitle>Getting Started</CardTitle>
           </CardHeader>
           <div className="space-y-2">
-            {recentActivity.map((activity, i) => (
+            {[
+              { step: "1", text: "Fund your wallet with testnet USDC", link: "https://faucet.circle.com", linkText: "Get USDC", done: balance > 0 },
+              { step: "2", text: "Pick a game from the lobby", link: "/lobby", linkText: "Browse games", done: false },
+              { step: "3", text: "Place your first bet and play", link: "/roulette", linkText: "Try Roulette", done: false },
+            ].map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -10 }}
@@ -127,25 +139,22 @@ export default function HomePage() {
                 className="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--border-hover)] transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent-gold/20 to-accent-warm/20 flex items-center justify-center">
-                    <span className="text-xs font-mono text-accent-gold">{activity.player.slice(2, 4)}</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${item.done ? "bg-emerald-500/20 text-emerald-400" : "bg-accent-gold/10 text-accent-gold"}`}>
+                    {item.done ? "✓" : item.step}
                   </div>
-                  <div>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">{activity.player}</span>
-                    <span className="text-xs text-[var(--text-muted)] ml-2">{activity.game}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant={activity.result === "Won" ? "success" : "danger"}>
-                    {activity.result}
-                  </Badge>
-                  <span className={`text-sm font-semibold font-mono ${activity.result === "Won" ? "text-emerald-400" : "text-red-400"}`}>
-                    {activity.result === "Won" ? "+" : "-"}${activity.amount}
-                  </span>
-                  <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {activity.time}
+                  <span className={`text-sm ${item.done ? "text-[var(--text-muted)] line-through" : "text-[var(--text-primary)]"}`}>
+                    {item.text}
                   </span>
                 </div>
+                {item.link.startsWith("http") ? (
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-xs text-accent-gold hover:underline flex items-center gap-1">
+                    {item.linkText} <ArrowRight className="w-3 h-3" />
+                  </a>
+                ) : (
+                  <Link href={item.link} className="text-xs text-accent-gold hover:underline flex items-center gap-1">
+                    {item.linkText} <ArrowRight className="w-3 h-3" />
+                  </Link>
+                )}
               </motion.div>
             ))}
           </div>

@@ -13,13 +13,13 @@ const wallets = [
     id: "metaMask",
     name: "MetaMask",
     description: "Popular browser extension wallet",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg",
+    icon: "/metamask.svg",
   },
   {
-    id: "zerion",
+    id: "injected",
     name: "Zerion",
     description: "Smart wallet for DeFi",
-    icon: "https://assets.zerion.io/v3/assets/zerion-logo-icon.svg",
+    icon: "/zerion.svg",
   },
 ];
 
@@ -43,12 +43,12 @@ export default function LoginPage() {
   const handleConnect = (walletId: string) => {
     setConnectingWallet(walletId);
 
-    // Try to find the matching connector
+    // Find the best matching connector
     const connector = connectors.find((c) => {
-      const name = c.name.toLowerCase();
-      const id = c.id.toLowerCase();
+      const cId = c.id.toLowerCase();
+      const cName = c.name.toLowerCase();
       const target = walletId.toLowerCase();
-      return id.includes(target) || name.includes(target);
+      return cId.includes(target) || cName.includes(target);
     });
 
     if (connector) {
@@ -60,8 +60,8 @@ export default function LoginPage() {
         }
       );
     } else {
-      // Use the first injected connector as fallback
-      const fallback = connectors.find((c) => c.type === "injected") || connectors[0];
+      // Fallback: use the first available connector
+      const fallback = connectors[0];
       if (fallback) {
         connect(
           { connector: fallback },
@@ -76,23 +76,19 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Ambient particle field */}
       <Particles count={50} />
 
-      {/* Radial glow accents */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <GlowEffect className="top-[20%] left-[30%] -translate-x-1/2 -translate-y-1/2" size={600} intensity="low" color="rgba(196, 169, 122, 0.08)" />
         <GlowEffect className="bottom-[20%] right-[20%]" size={450} intensity="low" color="rgba(176, 141, 88, 0.06)" />
         <GlowEffect className="top-[60%] left-[60%]" size={350} intensity="low" color="rgba(232, 213, 176, 0.05)" />
       </div>
 
-      {/* Subtle grid overlay */}
       <div className="absolute inset-0 opacity-[0.015]" style={{
         backgroundImage: "linear-gradient(rgba(196,169,122,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(196,169,122,0.3) 1px, transparent 1px)",
         backgroundSize: "60px 60px",
       }} />
 
-      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -100,22 +96,30 @@ export default function LoginPage() {
         className="relative z-10 w-full max-w-[420px] mx-4"
       >
         <div className="glass-card p-8 md:p-10 relative overflow-hidden">
-          {/* Subtle inner glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-gradient-radial pointer-events-none opacity-30" />
 
-          {/* Arc branding */}
+          {/* Liminal logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
+            className="flex justify-center mb-4"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/liminal-logo.svg" alt="Liminal" className="w-12 h-12" />
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="text-center mb-8"
+            className="text-center mb-6"
           >
             <span className="text-[10px] tracking-[0.35em] uppercase text-[var(--text-muted)] font-medium">
               Powered by Arc
             </span>
           </motion.div>
 
-          {/* Tagline */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -138,7 +142,6 @@ export default function LoginPage() {
             </h1>
           </motion.div>
 
-          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -148,7 +151,6 @@ export default function LoginPage() {
             Connect to Arc Testnet
           </motion.p>
 
-          {/* Wallet Options */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -168,25 +170,7 @@ export default function LoginPage() {
                 className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-accent-gold/20 hover:bg-[var(--bg-card-hover)] transition-all duration-300 disabled:opacity-40 group"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={wallet.icon}
-                  alt={wallet.name}
-                  width={44}
-                  height={44}
-                  className="w-11 h-11 rounded-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
-                  onError={(e) => {
-                    // Fallback to initials if CDN image fails
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    const parent = target.parentElement;
-                    if (parent) {
-                      const fallback = document.createElement("div");
-                      fallback.className = "w-11 h-11 rounded-xl bg-gradient-to-br from-accent-gold/20 to-accent-warm/20 flex items-center justify-center flex-shrink-0";
-                      fallback.innerHTML = `<span class="text-lg font-bold text-accent-gold">${wallet.name[0]}</span>`;
-                      parent.insertBefore(fallback, target);
-                    }
-                  }}
-                />
+                <img src={wallet.icon} alt={wallet.name} className="w-11 h-11 rounded-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-105" />
                 <div className="flex-1 text-left">
                   <p className="font-semibold text-[var(--text-primary)] text-[14px] leading-tight">
                     {wallet.name}
@@ -210,7 +194,6 @@ export default function LoginPage() {
             ))}
           </motion.div>
 
-          {/* Error */}
           <AnimatePresence>
             {error && (
               <motion.div
@@ -220,17 +203,14 @@ export default function LoginPage() {
                 className="mt-4 px-3 py-2.5 rounded-xl bg-red-500/5 border border-red-500/10"
               >
                 <p className="text-[11px] text-red-400 text-center">
-                  {error.message.includes("rejected")
+                  {error.message.includes("rejected") || error.message.includes("denied")
                     ? "Connection declined — please try again"
-                    : error.message.includes("not found")
-                    ? "Wallet not detected — please install the extension"
                     : "Connection interrupted — please retry"}
                 </p>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Footer */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -247,7 +227,6 @@ export default function LoginPage() {
           </motion.div>
         </div>
 
-        {/* Network badge below card */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
