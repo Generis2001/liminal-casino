@@ -282,7 +282,7 @@ export default function BlackjackPage() {
                   </AnimatePresence>
                 </div>
                 {result && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} delay={1} className="absolute -bottom-10 bg-black/80 px-4 py-1 rounded-full border border-white/10 text-white font-mono font-bold text-sm">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="absolute -bottom-10 bg-black/80 px-4 py-1 rounded-full border border-white/10 text-white font-mono font-bold text-sm">
                     {result.dealerScore} {result.dealerScore > 21 && <span className="text-red-400 ml-1">BUST</span>}
                   </motion.div>
                 )}
