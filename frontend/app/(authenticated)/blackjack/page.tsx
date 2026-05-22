@@ -223,7 +223,9 @@ export default function BlackjackPage() {
                 </div>
                 <div className="flex gap-1">
                   {[10, 50, 100].map((v) => (
-                    <Badge key={v} variant={betAmount === v ? "accent" : "default"} className="cursor-pointer" onClick={() => setBetAmount(v)}>${v}</Badge>
+                    <button key={v} type="button" onClick={() => setBetAmount(v)} className="cursor-pointer">
+                      <Badge variant={betAmount === v ? "accent" : "default"}>${v}</Badge>
+                    </button>
                   ))}
                 </div>
              </div>
