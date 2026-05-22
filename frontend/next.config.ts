@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -16,7 +17,10 @@ const nextConfig: NextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@react-native-async-storage/async-storage": false,
+      "@react-native-async-storage/async-storage": path.resolve(
+        "./lib/stubs/empty.js"
+      ),
+      "@farcaster/mini-app-solana": path.resolve("./lib/stubs/empty.js"),
     };
     return config;
   },

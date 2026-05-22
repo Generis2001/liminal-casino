@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Web3Provider } from "@/providers/Web3Provider";
+import { PrivyAppProvider } from "@/providers/PrivyAppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-body antialiased">
         <ThemeProvider>
-          <Web3Provider>{children}</Web3Provider>
+          <PrivyAppProvider>{children}</PrivyAppProvider>
         </ThemeProvider>
       </body>
     </html>

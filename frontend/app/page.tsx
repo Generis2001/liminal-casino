@@ -1,89 +1,43 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAccount, useConnect, useSwitchChain } from "wagmi";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Particles } from "@/components/effects/Particles";
 import { GlowEffect } from "@/components/effects/GlowEffect";
-import { ARC_CHAIN_ID } from "@/lib/arcChain";
-
-const wallets = [
-  {
-    id: "metaMask",
-    name: "MetaMask",
-    description: "Popular browser extension wallet",
-    icon: "/metamask.svg",
-  },
-  {
-    id: "injected",
-    name: "Zerion",
-    description: "Smart wallet for DeFi",
-    icon: "/zerion.svg",
-  },
-];
+import { useLiminalAuth } from "@/hooks/useLiminalAuth";
+import { Loader2, Mail, Wallet, ChevronRight } from "lucide-react";
 
 export default function LoginPage() {
-  const { address, isConnected, chainId } = useAccount();
-  const { connect, connectors, isPending, error } = useConnect();
-  const { switchChain } = useSwitchChain();
+  const { ready, authenticated, login } = useLiminalAuth();
   const router = useRouter();
-  const [connectingWallet, setConnectingWallet] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
-    if (isConnected && address) {
-      if (chainId !== ARC_CHAIN_ID) {
-        switchChain?.({ chainId: ARC_CHAIN_ID });
-      } else {
-        router.push("/home");
-      }
+    if (ready && authenticated) {
+      router.push("/home");
     }
-  }, [isConnected, address, chainId, router, switchChain]);
+  }, [ready, authenticated, router]);
 
-  const handleConnect = (walletId: string) => {
-    setConnectingWallet(walletId);
-
-    // Find the best matching connector
-    const connector = connectors.find((c) => {
-      const cId = c.id.toLowerCase();
-      const cName = c.name.toLowerCase();
-      const target = walletId.toLowerCase();
-      return cId.includes(target) || cName.includes(target);
-    });
-
-    if (connector) {
-      connect(
-        { connector },
-        {
-          onError: () => setConnectingWallet(null),
-          onSuccess: () => setConnectingWallet(null),
-        }
-      );
-    } else {
-      // Fallback: use the first available connector
-      const fallback = connectors[0];
-      if (fallback) {
-        connect(
-          { connector: fallback },
-          {
-            onError: () => setConnectingWallet(null),
-            onSuccess: () => setConnectingWallet(null),
-          }
-        );
-      }
-    }
+  const handleLogin = () => {
+    setIsLoggingIn(true);
+    login();
+    // Reset after a moment in case modal is dismissed
+    setTimeout(() => setIsLoggingIn(false), 3000);
   };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <Particles count={50} />
 
+      {/* Background glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <GlowEffect className="top-[20%] left-[30%] -translate-x-1/2 -translate-y-1/2" size={600} intensity="low" color="rgba(196, 169, 122, 0.08)" />
         <GlowEffect className="bottom-[20%] right-[20%]" size={450} intensity="low" color="rgba(176, 141, 88, 0.06)" />
         <GlowEffect className="top-[60%] left-[60%]" size={350} intensity="low" color="rgba(232, 213, 176, 0.05)" />
       </div>
 
+      {/* Grid */}
       <div className="absolute inset-0 opacity-[0.015]" style={{
         backgroundImage: "linear-gradient(rgba(196,169,122,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(196,169,122,0.3) 1px, transparent 1px)",
         backgroundSize: "60px 60px",
@@ -98,7 +52,7 @@ export default function LoginPage() {
         <div className="glass-card p-8 md:p-10 relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-gradient-radial pointer-events-none opacity-30" />
 
-          {/* Liminal logo */}
+          {/* Logo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -120,6 +74,7 @@ export default function LoginPage() {
             </span>
           </motion.div>
 
+          {/* Headline */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -148,69 +103,103 @@ export default function LoginPage() {
             transition={{ delay: 0.6, duration: 0.5 }}
             className="text-center text-[11px] text-[var(--text-muted)] mb-10 tracking-[0.15em] uppercase"
           >
-            Connect to Arc Testnet
+            Decentralized Casino on Arc Testnet
           </motion.p>
 
+          {/* Primary CTA — Privy login */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55, duration: 0.5 }}
             className="space-y-3"
           >
-            {wallets.map((wallet, index) => (
-              <motion.button
-                key={wallet.id}
-                initial={{ opacity: 0, x: -15 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + index * 0.12, duration: 0.5, ease: "easeOut" }}
-                whileHover={{ scale: 1.015, boxShadow: "0 4px 24px rgba(196,169,122,0.12)" }}
-                whileTap={{ scale: 0.985 }}
-                onClick={() => handleConnect(wallet.id)}
-                disabled={isPending}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-accent-gold/20 hover:bg-[var(--bg-card-hover)] transition-all duration-300 disabled:opacity-40 group"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={wallet.icon} alt={wallet.name} className="w-11 h-11 rounded-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-105" />
-                <div className="flex-1 text-left">
+            {/* Enter Liminal with Privy */}
+            <motion.button
+              whileHover={{ scale: 1.015, boxShadow: "0 4px 32px rgba(196,169,122,0.25)" }}
+              whileTap={{ scale: 0.985 }}
+              onClick={handleLogin}
+              disabled={!ready || isLoggingIn}
+              id="privy-login-btn"
+              className="w-full flex items-center justify-between p-4 rounded-2xl border border-accent-gold/30 bg-gradient-to-r from-accent-gold/10 to-accent-gold/5 hover:from-accent-gold/20 hover:to-accent-gold/10 hover:border-accent-gold/50 transition-all duration-300 disabled:opacity-40 group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent-gold/15 border border-accent-gold/20 flex items-center justify-center flex-shrink-0">
+                  {isLoggingIn ? (
+                    <Loader2 className="w-5 h-5 text-accent-gold animate-spin" />
+                  ) : (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#C4A97A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <div className="text-left">
                   <p className="font-semibold text-[var(--text-primary)] text-[14px] leading-tight">
-                    {wallet.name}
+                    Enter Liminal with Privy
                   </p>
                   <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                    {connectingWallet === wallet.id && isPending ? "Awaiting approval..." : wallet.description}
+                    Email · Wallet · Social · Embedded
                   </p>
                 </div>
-                {connectingWallet === wallet.id && isPending ? (
-                  <motion.div
-                    className="w-5 h-5 border-2 border-accent-gold/60 border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                  />
-                ) : (
-                  <svg className="w-4 h-4 text-[var(--text-muted)] group-hover:text-accent-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                )}
+              </div>
+              <ChevronRight className="w-4 h-4 text-accent-gold/60 group-hover:text-accent-gold transition-colors" />
+            </motion.button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1 h-px bg-[var(--border-color)]" />
+              <span className="text-[10px] text-[var(--text-muted)] tracking-widest uppercase">Or continue with</span>
+              <div className="flex-1 h-px bg-[var(--border-color)]" />
+            </div>
+
+            {/* Quick method hints */}
+            <div className="grid grid-cols-2 gap-2">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleLogin}
+                disabled={!ready}
+                id="email-login-btn"
+                className="flex items-center gap-2 p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--border-hover)] transition-all duration-200 text-left group"
+              >
+                <Mail className="w-4 h-4 text-[var(--text-muted)] group-hover:text-accent-gold transition-colors flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-[var(--text-primary)]">Email</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">OTP login</p>
+                </div>
               </motion.button>
-            ))}
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleLogin}
+                disabled={!ready}
+                id="wallet-login-btn"
+                className="flex items-center gap-2 p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--border-hover)] transition-all duration-200 text-left group"
+              >
+                <Wallet className="w-4 h-4 text-[var(--text-muted)] group-hover:text-accent-gold transition-colors flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-[var(--text-primary)]">Wallet</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">MetaMask · Zerion</p>
+                </div>
+              </motion.button>
+            </div>
           </motion.div>
 
+          {/* Loading overlay while Privy initializes */}
           <AnimatePresence>
-            {error && (
+            {!ready && (
               <motion.div
-                initial={{ opacity: 0, y: -5, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, y: -5, height: 0 }}
-                className="mt-4 px-3 py-2.5 rounded-xl bg-red-500/5 border border-red-500/10"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-[var(--bg-primary)]/80 backdrop-blur-sm flex items-center justify-center rounded-2xl"
               >
-                <p className="text-[11px] text-red-400 text-center">
-                  {error.message.includes("rejected") || error.message.includes("denied")
-                    ? "Connection declined — please try again"
-                    : "Connection interrupted — please retry"}
-                </p>
+                <Loader2 className="w-6 h-6 text-accent-gold animate-spin" />
               </motion.div>
             )}
           </AnimatePresence>
 
+          {/* Footer */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -234,7 +223,7 @@ export default function LoginPage() {
           className="text-center mt-4"
         >
           <span className="text-[10px] text-[var(--text-muted)] tracking-wide">
-            Arc Testnet · Chain ID 5042002
+            Arc Testnet · Chain ID 5042002 · Secured by Privy
           </span>
         </motion.div>
       </motion.div>
