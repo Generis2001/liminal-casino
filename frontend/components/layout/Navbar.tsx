@@ -10,11 +10,24 @@ import { useGameStore } from "@/stores/gameStore";
 import { useUSDCBalance } from "@/lib/useUSDCBalance";
 import Link from "next/link";
 
+import { useState } from "react";
+
 export function Navbar() {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const toggleSidebar = useGameStore((s) => s.toggleSidebar);
   const { value: balance, isPending, isLoading, refetch } = useUSDCBalance();
+  const [isManualSpin, setIsManualSpin] = useState(false);
+
+  const handleRefresh = async () => {
+    if (isManualSpin) return;
+    setIsManualSpin(true);
+    try {
+      await refetch();
+    } finally {
+      setTimeout(() => setIsManualSpin(false), 800);
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 z-40 glass border-b border-[var(--border-color)]">
@@ -44,7 +57,7 @@ export function Navbar() {
             <motion.button
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
-              onClick={() => refetch()}
+              onClick={handleRefresh}
               title="Click to refresh balance"
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-accent-gold/30 transition-all cursor-pointer"
             >
@@ -66,7 +79,7 @@ export function Navbar() {
                   className="text-sm font-semibold text-[var(--text-primary)] font-mono"
                 />
               )}
-              <RefreshCw className={`w-3 h-3 flex-shrink-0 transition-all duration-300 ${isPending ? "text-accent-gold animate-spin" : "text-[var(--text-muted)] opacity-50"}`} />
+              <RefreshCw className={`w-3 h-3 flex-shrink-0 transition-all duration-300 ${isManualSpin ? "text-accent-gold animate-spin" : "text-[var(--text-muted)] opacity-50"}`} />
             </motion.button>
           )}
 
