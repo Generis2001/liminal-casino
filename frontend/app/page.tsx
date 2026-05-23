@@ -91,7 +91,7 @@ export default function LoginPage() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-center mb-6"
           >
-            <span className="text-[10px] tracking-[0.35em] uppercase text-[var(--text-muted)] font-medium flex items-center justify-center gap-1">
+            <span className="text-[10px] tracking-[0.35em] uppercase text-[var(--text-muted)] font-medium">
               Powered by <span className="text-[var(--text-secondary)]">{withCustomA("Arc")}</span>
             </span>
           </motion.div>
@@ -116,7 +116,7 @@ export default function LoginPage() {
               backgroundClip: "text",
             }}>
               <span className="text-[0.45em] tracking-[0.1em] opacity-80 mb-1">the</span>
-              <span className="flex items-center">{withCustomA("LIMINAL")}</span>
+              <span>{withCustomA("LIMINAL")}</span>
               <span className="text-[0.45em] tracking-[0.1em] opacity-80 mt-1">space</span>
             </h1>
           </motion.div>
@@ -125,7 +125,7 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
-            className="text-center text-[11px] text-[var(--text-muted)] mb-10 tracking-[0.15em] uppercase flex items-center justify-center"
+            className="text-center text-[11px] text-[var(--text-muted)] mb-10 tracking-[0.15em] uppercase"
           >
             Decentralized Casino on {withCustomA("Arc")} Testnet
           </motion.p>
