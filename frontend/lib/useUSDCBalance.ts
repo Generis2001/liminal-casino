@@ -108,7 +108,7 @@ export function useUSDCBlockSync() {
     prevBlockRef.current = blockNumber;
 
     queryClient.invalidateQueries({
-      queryKey: ["readContract"],
+      queryKey: ["readContract", { address: USDC_ADDRESS, functionName: "balanceOf" }],
     });
   }, [blockNumber, address, queryClient]);
 }
@@ -139,10 +139,10 @@ export function useInvalidateUSDCBalance() {
         }
       }
 
-      // Invalidate with exact: false so it matches regardless of arg shape
-    queryClient.invalidateQueries({
-      queryKey: ["readContract"],
-    });
+      // Invalidate specifically the balanceOf query for USDC
+      queryClient.invalidateQueries({
+        queryKey: ["readContract", { address: USDC_ADDRESS, functionName: "balanceOf" }],
+      });
     },
     [address, queryClient, publicClient]
   );

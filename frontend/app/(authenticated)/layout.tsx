@@ -9,12 +9,14 @@ import { AnimatePresence } from "framer-motion";
 import { useLiminalAuth } from "@/hooks/useLiminalAuth";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useUSDCBlockSync } from "@/lib/useUSDCBalance";
 
 export default function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  useUSDCBlockSync();
   const { ready, authenticated } = useLiminalAuth();
   const router = useRouter();
   const isSidebarOpen = useGameStore((s) => s.isSidebarOpen);
