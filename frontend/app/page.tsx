@@ -14,9 +14,9 @@ const CustomA = ({ className = "" }: { className?: string }) => (
     viewBox="0 0 100 100" 
     className={`inline-block fill-current ${className}`}
     style={{ 
-      width: '0.75em', 
-      height: '0.85em', 
-      transform: 'translateY(-0.05em)',
+      width: '0.88em', 
+      height: '0.98em', 
+      transform: 'translateY(-0.02em)',
       margin: '0 0.02em'
     }}
   >
