@@ -64,9 +64,7 @@ export function Navbar() {
                   className="text-sm font-semibold text-[var(--text-primary)] font-mono"
                 />
               )}
-              {isPending && (
-                <RefreshCw className="w-3 h-3 text-accent-gold animate-spin flex-shrink-0" />
-              )}
+              <RefreshCw className={`w-3 h-3 flex-shrink-0 transition-all duration-300 ${isPending ? "text-accent-gold animate-spin" : "text-[var(--text-muted)] opacity-50"}`} />
             </motion.button>
           )}
 
