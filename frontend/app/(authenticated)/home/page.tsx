@@ -12,9 +12,11 @@ import { truncateAddress } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/animations/variants";
 import {
   CircleDot, Spade, Cherry, TrendingUp, Gift, Zap,
-  Wallet, ArrowRight, RefreshCw
+  Wallet, ArrowRight, RefreshCw, Send, QrCode
 } from "lucide-react";
 import Link from "next/link";
+import { SendModal } from "@/components/wallet/SendModal";
+import { ReceiveModal } from "@/components/wallet/ReceiveModal";
 
 const quickGames = [
   { href: "/roulette", name: "Roulette", icon: CircleDot, color: "from-red-500/20 to-orange-500/20", description: "Spin the wheel" },
@@ -27,6 +29,8 @@ export default function HomePage() {
   const { address } = useAccount();
   const { value: balance, formatted, isLoading, isPending, refetch } = useUSDCBalance();
   const [isManualSpin, setIsManualSpin] = useState(false);
+  const [isSendOpen, setIsSendOpen] = useState(false);
+  const [isReceiveOpen, setIsReceiveOpen] = useState(false);
 
   const handleRefresh = async () => {
     if (isManualSpin) return;
@@ -90,15 +94,23 @@ export default function HomePage() {
                 <p className="text-xs text-[var(--text-muted)] mt-1">USDC on Arc Testnet</p>
               </div>
               <div className="flex flex-col gap-2">
-                <a
-                  href="https://faucet.circle.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="secondary" size="sm">
-                    Fund Wallet <ArrowRight className="w-3 h-3" />
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => setIsReceiveOpen(true)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20">
+                    <QrCode className="w-4 h-4 mr-1" /> Receive
                   </Button>
-                </a>
+                  <Button variant="secondary" size="sm" onClick={() => setIsSendOpen(true)} className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20">
+                    <Send className="w-4 h-4 mr-1" /> Send
+                  </Button>
+                  <a
+                    href="https://faucet.circle.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="secondary" size="sm" className="hidden sm:flex">
+                      Faucet <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </a>
+                </div>
               </div>
             </div>
             {!isLoading && balance === 0 && (
@@ -173,6 +185,9 @@ export default function HomePage() {
             ))}
           </div>
         </motion.div>
+        {/* Modals */}
+        <SendModal isOpen={isSendOpen} onClose={() => setIsSendOpen(false)} />
+        <ReceiveModal isOpen={isReceiveOpen} onClose={() => setIsReceiveOpen(false)} />
       </motion.div>
     </PageTransition>
   );
