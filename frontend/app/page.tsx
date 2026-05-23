@@ -7,6 +7,29 @@ import { Particles } from "@/components/effects/Particles";
 import { GlowEffect } from "@/components/effects/GlowEffect";
 import { useLiminalAuth } from "@/hooks/useLiminalAuth";
 import { Loader2, Mail, Wallet, ChevronRight } from "lucide-react";
+import React from "react";
+
+const CustomA = ({ className = "" }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 100 100" 
+    className={`inline-block fill-current ${className}`}
+    style={{ 
+      width: '0.75em', 
+      height: '0.85em', 
+      transform: 'translateY(-0.05em)',
+      margin: '0 0.02em'
+    }}
+  >
+    <path d="M15,95 C15,45 35,5 50,5 C65,5 85,45 85,95 C78,90 70,86 65,84 C60,55 55,30 50,30 C45,30 40,55 35,84 C30,86 22,90 15,95 Z" />
+    <path d="M66,66 C55,66 45,68 40,71 L38,85 C45,82 55,80 65,80 Z" />
+  </svg>
+);
+
+const withCustomA = (text: string) => {
+  return text.split(/(A)/g).map((part, i) => 
+    part === 'A' ? <CustomA key={i} /> : part
+  );
+};
 
 export default function LoginPage() {
   const { ready, authenticated, login } = useLiminalAuth();
@@ -22,7 +45,6 @@ export default function LoginPage() {
   const handleLogin = () => {
     setIsLoggingIn(true);
     login();
-    // Reset after a moment in case modal is dismissed
     setTimeout(() => setIsLoggingIn(false), 3000);
   };
 
@@ -69,8 +91,8 @@ export default function LoginPage() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-center mb-6"
           >
-            <span className="text-[10px] tracking-[0.35em] uppercase text-[var(--text-muted)] font-medium">
-              Powered by Arc
+            <span className="text-[10px] tracking-[0.35em] uppercase text-[var(--text-muted)] font-medium flex items-center justify-center gap-1">
+              Powered by <span className="text-[var(--text-secondary)]">{withCustomA("Arc")}</span>
             </span>
           </motion.div>
 
@@ -87,13 +109,15 @@ export default function LoginPage() {
               animate={{ opacity: [0.4, 0.8, 0.4], scale: [0.98, 1.04, 0.98] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
-            <h1 className="relative font-display font-black text-[3.2rem] md:text-[3.8rem] leading-[1.05] tracking-[-0.02em]" style={{
+            <h1 className="relative font-display font-black text-[3.2rem] md:text-[3.8rem] leading-[1.05] tracking-[-0.02em] flex flex-col items-center justify-center" style={{
               background: "linear-gradient(145deg, #c4a97a 0%, #e8d5b0 35%, #d4be94 55%, #967545 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
             }}>
-              the LIMINAL space
+              <span className="text-[0.45em] tracking-[0.1em] opacity-80 mb-1">the</span>
+              <span className="flex items-center">{withCustomA("LIMINAL")}</span>
+              <span className="text-[0.45em] tracking-[0.1em] opacity-80 mt-1">space</span>
             </h1>
           </motion.div>
 
@@ -101,9 +125,9 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
-            className="text-center text-[11px] text-[var(--text-muted)] mb-10 tracking-[0.15em] uppercase"
+            className="text-center text-[11px] text-[var(--text-muted)] mb-10 tracking-[0.15em] uppercase flex items-center justify-center"
           >
-            Decentralized Casino on Arc Testnet
+            Decentralized Casino on {withCustomA("Arc")} Testnet
           </motion.p>
 
           {/* Primary CTA — Privy login */}
@@ -206,7 +230,7 @@ export default function LoginPage() {
             transition={{ delay: 1.1, duration: 0.6 }}
             className="mt-10 pt-5 border-t border-[var(--border-color)]"
           >
-            <div className="flex items-center justify-center gap-6 text-[9px] text-[var(--text-muted)] tracking-[0.2em] uppercase">
+            <div className="flex items-center justify-center gap-4 text-[9px] text-[var(--text-muted)] tracking-[0.2em] uppercase">
               <span>Decentralized</span>
               <span className="w-1 h-1 rounded-full bg-accent-gold/40" />
               <span>Provably Fair</span>
@@ -220,10 +244,10 @@ export default function LoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.3 }}
-          className="text-center mt-4"
+          className="text-center mt-4 flex items-center justify-center gap-1"
         >
           <span className="text-[10px] text-[var(--text-muted)] tracking-wide">
-            Arc Testnet · Chain ID 5042002 · Secured by Privy
+            {withCustomA("Arc")} Testnet · Chain ID 5042002 · Secured by Privy
           </span>
         </motion.div>
       </motion.div>
