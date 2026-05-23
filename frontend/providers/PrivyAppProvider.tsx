@@ -3,6 +3,7 @@
 import { PrivyProvider } from "@privy-io/react-auth";
 import { Web3Provider } from "./Web3Provider";
 import { privyConfig } from "@/lib/privyConfig";
+import { NetworkEnforcer } from "./NetworkEnforcer";
 
 export function PrivyAppProvider({ children }: { children: React.ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
@@ -19,7 +20,9 @@ export function PrivyAppProvider({ children }: { children: React.ReactNode }) {
       appId={appId ?? "clpispdty00ycl80fpueukbhl"} // fallback to Privy demo app
       config={privyConfig}
     >
-      <Web3Provider>{children}</Web3Provider>
+      <NetworkEnforcer>
+        <Web3Provider>{children}</Web3Provider>
+      </NetworkEnforcer>
     </PrivyProvider>
   );
 }
