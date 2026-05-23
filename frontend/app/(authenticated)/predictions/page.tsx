@@ -69,9 +69,9 @@ export default function PredictionsPage() {
     return Array.from({ length: marketCount }).map((_, i) => ({
       address: PREDICTION_ADDRESS,
       abi: PREDICTION_ABI,
-      functionName: "getMarket",
-      args: [BigInt(i)]
-    })) as const;
+      functionName: "getMarket" as const,
+      args: [BigInt(i)],
+    }));
   }, [marketCount]);
 
   const { data: marketsData, refetch: refetchMarkets } = useReadContracts({
@@ -228,7 +228,7 @@ export default function PredictionsPage() {
               <Card key={m.id.toString()} glow className={`p-5 ${selectedMarket === Number(m.id) ? "border-accent-gold/50" : ""}`} onClick={() => setSelectedMarket(selectedMarket === Number(m.id) ? null : Number(m.id))}>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
                   <h3 className="font-semibold text-base md:text-lg text-[var(--text-primary)]">{m.description}</h3>
-                  <Badge variant={m.status === 0 ? "success" : "secondary"}>{getStatusLabel(m.status)}</Badge>
+                  <Badge variant={m.status === 0 ? "success" : "default"}>{getStatusLabel(m.status)}</Badge>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)] mb-4">
@@ -270,7 +270,7 @@ export default function PredictionsPage() {
                         />
                       </div>
                       <Button 
-                        size="default" 
+                        size="md" 
                         disabled={!position || isLoading || (CONTRACTS_DEPLOYED && stake > balance)} 
                         isLoading={isLoading}
                         onClick={(e) => { e.stopPropagation(); handlePlaceBet(m.id); }}
