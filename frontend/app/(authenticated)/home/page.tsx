@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { PageTransition } from "@/components/effects/PageTransition";
@@ -25,6 +26,17 @@ const quickGames = [
 export default function HomePage() {
   const { address } = useAccount();
   const { value: balance, formatted, isLoading, isPending, refetch } = useUSDCBalance();
+  const [isManualSpin, setIsManualSpin] = useState(false);
+
+  const handleRefresh = async () => {
+    if (isManualSpin) return;
+    setIsManualSpin(true);
+    try {
+      await refetch();
+    } finally {
+      setTimeout(() => setIsManualSpin(false), 800);
+    }
+  };
 
   return (
     <PageTransition>
@@ -61,9 +73,9 @@ export default function HomePage() {
               <div>
                 <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Wallet className="w-3.5 h-3.5" /> Wallet Balance
-                  {isPending && (
-                    <RefreshCw className="w-3 h-3 text-accent-gold animate-spin" />
-                  )}
+                  <button onClick={handleRefresh} className="hover:text-accent-gold transition-colors focus:outline-none" title="Refresh Balance">
+                    <RefreshCw className={`w-3 h-3 transition-all duration-300 ${isManualSpin ? "text-accent-gold animate-spin" : "opacity-50"}`} />
+                  </button>
                 </p>
                 {isLoading ? (
                   <div className="h-9 w-32 rounded-lg bg-[var(--bg-card)] animate-pulse" />
@@ -87,12 +99,6 @@ export default function HomePage() {
                     Fund Wallet <ArrowRight className="w-3 h-3" />
                   </Button>
                 </a>
-                <button
-                  onClick={() => refetch()}
-                  className="text-xs text-[var(--text-muted)] hover:text-accent-gold transition-colors flex items-center gap-1 justify-center"
-                >
-                  <RefreshCw className="w-3 h-3" /> Refresh
-                </button>
               </div>
             </div>
             {!isLoading && balance === 0 && (
