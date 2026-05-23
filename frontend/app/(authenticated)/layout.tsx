@@ -50,7 +50,7 @@ export default function AuthenticatedLayout({
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <Navbar />
-      <div className="flex">
+      <div className="flex pt-16">
         <Sidebar />
         <main
           className={`flex-1 min-h-[calc(100vh-64px)] transition-all duration-300 ${
