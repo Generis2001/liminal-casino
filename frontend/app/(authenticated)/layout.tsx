@@ -19,11 +19,8 @@ export default function AuthenticatedLayout({
   const router = useRouter();
   const isSidebarOpen = useGameStore((s) => s.isSidebarOpen);
 
-  useEffect(() => {
-    if (ready && !authenticated) {
-      router.push("/");
-    }
-  }, [ready, authenticated, router]);
+  // We allow unauthenticated users to remain in the app layout 
+  // so they can seamlessly reconnect via the UI without being kicked out.
 
   // Privy initializing
   if (!ready) {
@@ -45,7 +42,8 @@ export default function AuthenticatedLayout({
     );
   }
 
-  if (!authenticated) return null;
+  // If not authenticated, we still render the layout but the inner components
+  // will handle the disconnected state gracefully.
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">

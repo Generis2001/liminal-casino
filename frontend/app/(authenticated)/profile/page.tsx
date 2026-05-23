@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount } from "wagmi";
 import { PageTransition } from "@/components/effects/PageTransition";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,12 +9,13 @@ import { AnimatedCounter } from "@/components/ui/Counter";
 import { staggerContainer, staggerItem } from "@/animations/variants";
 import { truncateAddress } from "@/lib/utils";
 import { useUSDCBalance } from "@/lib/useUSDCBalance";
-import { User, Copy, ExternalLink, Trophy, Flame, Target, LogOut, Edit2, Check, X, Camera } from "lucide-react";
+import { User, Copy, ExternalLink, Trophy, Flame, Target, LogOut, Edit2, Check, X, Camera, Wallet } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useLiminalAuth } from "@/hooks/useLiminalAuth";
 
 export default function ProfilePage() {
   const { address } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { logout, login, authenticated } = useLiminalAuth();
   const { value: usdcBalanceValue } = useUSDCBalance();
   
   const [copied, setCopied] = useState(false);
@@ -271,11 +272,17 @@ export default function ProfilePage() {
           </Card>
         </motion.div>
 
-        {/* Disconnect */}
+        {/* Disconnect or Reconnect */}
         <motion.div variants={staggerItem}>
-          <Button variant="danger" className="w-full" onClick={() => disconnect()}>
-            <LogOut className="w-4 h-4" /> Disconnect Wallet
-          </Button>
+          {(authenticated && address) ? (
+            <Button variant="danger" className="w-full" onClick={() => logout()}>
+              <LogOut className="w-4 h-4" /> Disconnect Wallet
+            </Button>
+          ) : (
+            <Button className="w-full bg-accent-gold text-black hover:bg-accent-gold/90 transition-colors" onClick={() => login()}>
+              <Wallet className="w-4 h-4" /> Reconnect Wallet
+            </Button>
+          )}
         </motion.div>
       </motion.div>
     </PageTransition>

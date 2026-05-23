@@ -94,14 +94,14 @@ export function Navbar() {
 
           {/* Wallet Connection */}
           <div className="flex items-center gap-2">
-            {!authenticated ? (
+            {(!authenticated || !address) ? (
               <button
                 onClick={() => login()}
                 className="px-4 py-1.5 rounded-xl bg-accent-gold/10 text-accent-gold border border-accent-gold/20 hover:bg-accent-gold/20 hover:scale-105 active:scale-95 font-semibold text-sm transition-all whitespace-nowrap shadow-[0_0_15px_rgba(196,169,122,0.1)]"
               >
                 Connect Wallet
               </button>
-            ) : address && (
+            ) : (
               <div className="flex items-center gap-2">
                 <a
                   href={`https://testnet.arcscan.app/address/${address}`}
