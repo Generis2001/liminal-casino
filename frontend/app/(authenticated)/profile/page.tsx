@@ -51,8 +51,43 @@ export default function ProfilePage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        setAvatarDataUrl(result);
-        localStorage.setItem(`liminal_avatar_${address}`, result);
+        
+        // Auto-compress the image to safely fit inside localStorage
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          const maxDim = 256; // 256x256 is plenty for an avatar
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG at 80% quality
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          
+          try {
+            setAvatarDataUrl(compressedDataUrl);
+            localStorage.setItem(`liminal_avatar_${address}`, compressedDataUrl);
+          } catch (err) {
+            console.error("[Liminal] Failed to save avatar to local storage", err);
+            alert("Image is still too large. Try a smaller file.");
+          }
+        };
+        img.src = result;
       };
       reader.readAsDataURL(file);
     }
@@ -151,23 +186,33 @@ export default function ProfilePage() {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 group">
-                      <h2 className="font-mono text-lg font-semibold truncate">
-                        {displayName || (address ? truncateAddress(address) : "Not Connected")}
-                      </h2>
-                      <button 
-                        onClick={() => setIsEditingName(true)}
-                        className="opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-accent-gold transition-all"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
+                    <div className="flex flex-col group">
+                      <div className="flex items-center gap-2">
+                        <h2 className={`text-lg truncate ${displayName ? 'font-display font-bold tracking-wide' : 'font-mono font-semibold'}`}>
+                          {displayName || (address ? truncateAddress(address) : "Not Connected")}
+                        </h2>
+                        <button 
+                          onClick={() => {
+                            setTempName(displayName);
+                            setIsEditingName(true);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-accent-gold transition-all"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {displayName && address && (
+                        <p className="font-mono text-xs text-[var(--text-muted)] mt-0.5">
+                          {truncateAddress(address)}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
                 
-                <div className="flex items-center gap-2 mt-2">
-                  <button onClick={copyAddress} className="text-xs text-[var(--text-muted)] hover:text-accent-gold flex items-center gap-1 transition-colors">
-                    <Copy className="w-3 h-3" /> {copied ? "Copied!" : displayName ? truncateAddress(address || "") : "Copy address"}
+                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
+                  <button onClick={copyAddress} className="text-xs text-[var(--text-muted)] hover:text-accent-gold flex items-center gap-1.5 transition-colors bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md">
+                    <Copy className="w-3 h-3" /> {copied ? "Copied!" : "Copy Address"}
                   </button>
                   <a href={`https://testnet.arcscan.app/address/${address}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--text-muted)] hover:text-accent-gold flex items-center gap-1 transition-colors">
                     <ExternalLink className="w-3 h-3" /> Explorer
