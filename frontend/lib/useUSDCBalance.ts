@@ -66,6 +66,8 @@ export function useUSDCBalance(): USDCBalance {
       enabled: !!address,
       // Consider data stale immediately so any invalidation triggers a refetch
       staleTime: 0,
+      // Force aggressive sub-second polling to ensure updates < 1s
+      refetchInterval: 800,
     },
   });
 
