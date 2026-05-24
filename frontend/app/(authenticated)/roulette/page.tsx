@@ -11,13 +11,16 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { staggerContainer, staggerItem } from "@/animations/variants";
 import { bouncySpring } from "@/animations/springs";
-import { CircleDot, Minus, Plus, RotateCcw, History, AlertCircle, CheckCircle2 } from "lucide-react";
+import { CircleDot, Minus, Plus, RotateCcw, History, AlertCircle, CheckCircle2, ArrowDownToLine } from "lucide-react";
 import {
   USDC_ADDRESS, ERC20_ABI,
   CASINO_ADDRESS, CASINO_ABI,
 } from "@/lib/contracts";
 import { useTx } from "@/lib/useTx";
-import { useUSDCBalance, useGameSettlement } from "@/lib/useUSDCBalance";
+import { useUSDCBalance, useWalletBalance, useGameSettlement } from "@/lib/useUSDCBalance";
+import { UsdcLogo } from "@/components/ui/UsdcLogo";
+import { WalletModal } from "@/components/layout/WalletModal";
+import { useState as useStateAlias } from "react";
 
 const ROULETTE_NUMBERS = Array.from({ length: 37 }, (_, i) => i);
 const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
@@ -47,9 +50,13 @@ export default function RoulettePage() {
   const [history, setHistory] = useState<number[]>([17, 0, 32, 15, 4, 21, 2, 25, 36, 8]);
 
   const { value: balance } = useUSDCBalance();
+  const walletBalance = useWalletBalance();
   const { handleGameSettlement } = useGameSettlement();
   const { send, status, error: txError, txHash, reset } = useTx();
   const { writeContractAsync } = useWriteContract();
+  const [showDepositModal, setShowDepositModal] = useStateAlias(false);
+
+  const needsDeposit = CONTRACTS_DEPLOYED && address && balance <= 0 && walletBalance.value > 0;
 
   const amountInUnits = parseUnits(betAmount.toString(), 6);
 
@@ -227,11 +234,24 @@ export default function RoulettePage() {
 
               {/* Balance indicator */}
               {address && (
-                <div className="mb-3 p-2 rounded-lg bg-[var(--bg-card)] text-xs text-[var(--text-muted)] flex justify-between">
+                <div className="mb-3 p-2 rounded-lg bg-[var(--bg-card)] text-xs text-[var(--text-muted)] flex justify-between items-center">
                   <span>Available</span>
-                  <span className="font-mono text-[var(--text-primary)]">${balance.toFixed(2)} USDC</span>
+                  <span className="font-mono text-[var(--text-primary)] flex items-center gap-1"><UsdcLogo size={12} />${balance.toFixed(2)} USDC</span>
                 </div>
               )}
+
+              {/* Deposit Prompt */}
+              {needsDeposit && (
+                <div className="mb-4 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-sm text-blue-400 font-semibold mb-1">⚡ Deposit USDC to Play</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-2">You have {walletBalance.formatted} USDC in your wallet. Deposit to your Casino Bankroll to start betting.</p>
+                  <Button size="sm" onClick={() => setShowDepositModal(true)} className="w-full">
+                    <ArrowDownToLine className="w-3 h-3 mr-1" /> Deposit USDC Now
+                  </Button>
+                </div>
+              )}
+
+              <WalletModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
 
               {/* Bet Amount */}
               <div className="mb-4">

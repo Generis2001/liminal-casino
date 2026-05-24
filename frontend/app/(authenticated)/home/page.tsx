@@ -14,6 +14,7 @@ import {
   CircleDot, Spade, Cherry, TrendingUp, Gift, Zap,
   Wallet, ArrowRight, RefreshCw, Send, QrCode
 } from "lucide-react";
+import { UsdcLogo } from "@/components/ui/UsdcLogo";
 import Link from "next/link";
 import { SendModal } from "@/components/wallet/SendModal";
 import { ReceiveModal } from "@/components/wallet/ReceiveModal";
@@ -76,7 +77,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <Wallet className="w-3.5 h-3.5" /> Wallet Balance
+                  <UsdcLogo size={14} /> Wallet Balance
                   <button onClick={handleRefresh} className="hover:text-accent-gold transition-colors focus:outline-none" title="Refresh Balance">
                     <RefreshCw className={`w-3 h-3 transition-all duration-300 ${isManualSpin ? "text-accent-gold animate-spin" : "opacity-50"}`} />
                   </button>

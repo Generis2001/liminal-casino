@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { staggerContainer, staggerItem } from "@/animations/variants";
-import { Spade, Minus, Plus, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Spade, Minus, Plus, AlertCircle, CheckCircle2, ArrowDownToLine } from "lucide-react";
 import {
   USDC_ADDRESS, ERC20_ABI,
   CASINO_ADDRESS, CASINO_ABI,
 } from "@/lib/contracts";
 import { useTx } from "@/lib/useTx";
-import { useUSDCBalance, useGameSettlement } from "@/lib/useUSDCBalance";
+import { useUSDCBalance, useWalletBalance, useGameSettlement } from "@/lib/useUSDCBalance";
+import { UsdcLogo } from "@/components/ui/UsdcLogo";
+import { WalletModal } from "@/components/layout/WalletModal";
 import { PlayingCard, Suit, Rank } from "@/components/blackjack/PlayingCard";
 
 const CONTRACTS_DEPLOYED = CASINO_ADDRESS !== "0x0000000000000000000000000000000000000000";
@@ -106,9 +108,13 @@ export default function BlackjackPage() {
   const [ghostBets, setGhostBets] = useState<number[]>(Array(5).fill(0));
 
   const { value: balance } = useUSDCBalance();
+  const walletBalance = useWalletBalance();
   const { handleGameSettlement } = useGameSettlement();
   const { send, status, error: txError, txHash, reset } = useTx();
   const { writeContractAsync } = useWriteContract();
+  const [showDepositModal, setShowDepositModal] = useState(false);
+
+  const needsDeposit = CONTRACTS_DEPLOYED && address && balance <= 0 && walletBalance.value > 0;
 
   const amountInUnits = parseUnits(betAmount.toString(), 6);
 
@@ -225,12 +231,19 @@ export default function BlackjackPage() {
                 {address && (
                   <div className="text-right hidden md:block">
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider block">Available Balance</span>
-                    <span className="font-mono font-bold text-accent-gold">${balance.toFixed(2)}</span>
+                    <span className="font-mono font-bold text-accent-gold flex items-center gap-1 justify-end"><UsdcLogo size={12} />${balance.toFixed(2)}</span>
                   </div>
                 )}
-                <Button onClick={handlePlay} isLoading={isLoading} disabled={isLoading || (CONTRACTS_DEPLOYED && betAmount > balance)} className="w-full md:w-auto shadow-xl shadow-accent-gold/20">
-                  <Spade className="w-4 h-4" /> {isLoading ? "Dealing..." : "Play Hand"}
-                </Button>
+                {needsDeposit ? (
+                  <Button onClick={() => setShowDepositModal(true)} className="w-full md:w-auto shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700">
+                    <ArrowDownToLine className="w-4 h-4" /> Deposit USDC to Play
+                  </Button>
+                ) : (
+                  <Button onClick={handlePlay} isLoading={isLoading} disabled={isLoading || (CONTRACTS_DEPLOYED && betAmount > balance)} className="w-full md:w-auto shadow-xl shadow-accent-gold/20">
+                    <Spade className="w-4 h-4" /> {isLoading ? "Dealing..." : "Play Hand"}
+                  </Button>
+                )}
+                <WalletModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
              </div>
            </Card>
 

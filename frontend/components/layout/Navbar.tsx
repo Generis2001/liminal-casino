@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { truncateAddress } from "@/lib/utils";
 import { AnimatedCounter } from "@/components/ui/Counter";
 import { Menu, LogOut, ExternalLink, RefreshCw, Wallet, Plus, Landmark } from "lucide-react";
+import { UsdcLogo } from "@/components/ui/UsdcLogo";
 import { useGameStore } from "@/stores/gameStore";
 import { useUSDCBalance } from "@/lib/useUSDCBalance";
 import Link from "next/link";
@@ -70,7 +71,7 @@ export function Navbar() {
                 title="Manage Treasury Wallet"
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-accent-gold/50 transition-all cursor-pointer group"
               >
-                <Landmark className="w-4 h-4 text-accent-gold group-hover:scale-110 transition-transform" />
+                <UsdcLogo size={16} className="group-hover:scale-110 transition-transform" />
                 {isLoading ? (
                   <span className="text-sm font-mono text-[var(--text-muted)] w-16">
                     Loading...

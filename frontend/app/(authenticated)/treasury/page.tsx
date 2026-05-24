@@ -7,6 +7,7 @@ import { AnimatedCounter } from "@/components/ui/Counter";
 import { Badge } from "@/components/ui/Badge";
 import { staggerContainer, staggerItem } from "@/animations/variants";
 import { Landmark, TrendingUp, Shield, DollarSign, BarChart3, Lock } from "lucide-react";
+import { UsdcLogo } from "@/components/ui/UsdcLogo";
 import { useReadContracts } from "wagmi";
 import { TREASURY_ADDRESS, TREASURY_ABI, CASINO_ADDRESS, PREDICTION_ADDRESS, REWARDS_ADDRESS, USDC_ADDRESS } from "@/lib/contracts";
 import { formatUnits } from "viem";
@@ -59,12 +60,12 @@ export default function TreasuryPage() {
 
         <motion.div variants={staggerItem} className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="p-5" hover={false}>
-            <DollarSign className="w-5 h-5 text-accent-gold mb-2" />
+            <UsdcLogo size={20} className="mb-2" />
             <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Total Balance</p>
             <AnimatedCounter value={treasuryBalance} prefix="$" decimals={0} className="text-2xl font-bold font-display text-[var(--text-primary)]" />
           </Card>
           <Card className="p-5" hover={false}>
-            <Landmark className="w-5 h-5 text-blue-400 mb-2" />
+            <UsdcLogo size={20} className="mb-2" />
             <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Bankroll</p>
             <AnimatedCounter value={bankroll} prefix="$" decimals={0} className="text-2xl font-bold font-display text-blue-400" />
           </Card>

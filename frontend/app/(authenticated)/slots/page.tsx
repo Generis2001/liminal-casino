@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { staggerContainer, staggerItem } from "@/animations/variants";
 import { reelSpring } from "@/animations/springs";
-import { Cherry, Minus, Plus, RotateCcw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Cherry, Minus, Plus, RotateCcw, AlertCircle, CheckCircle2, ArrowDownToLine } from "lucide-react";
 import {
   USDC_ADDRESS, ERC20_ABI,
   CASINO_ADDRESS, CASINO_ABI,
 } from "@/lib/contracts";
 import { useTx } from "@/lib/useTx";
-import { useUSDCBalance, useGameSettlement } from "@/lib/useUSDCBalance";
+import { useUSDCBalance, useWalletBalance, useGameSettlement } from "@/lib/useUSDCBalance";
+import { UsdcLogo } from "@/components/ui/UsdcLogo";
+import { WalletModal } from "@/components/layout/WalletModal";
 
 const SYMBOLS = ["🍒", "🍋", "🔔", "⭐", "💎", "🍀", "7️⃣", "👑"];
 const SYMBOL_PAYOUTS: Record<string, number> = { "👑": 100, "7️⃣": 50, "💎": 25, "⭐": 10, "🔔": 5, "🍀": 5, "🍋": 3, "🍒": 2 };
@@ -31,9 +33,13 @@ export default function SlotsPage() {
   const [result, setResult] = useState<{ won: boolean; payout: number; message: string } | null>(null);
 
   const { value: balance } = useUSDCBalance();
+  const walletBalance = useWalletBalance();
   const { handleGameSettlement } = useGameSettlement();
   const { send, status, error: txError, txHash, reset } = useTx();
   const { writeContractAsync } = useWriteContract();
+  const [showDepositModal, setShowDepositModal] = useState(false);
+
+  const needsDeposit = CONTRACTS_DEPLOYED && address && balance <= 0 && walletBalance.value > 0;
 
   const amountInUnits = parseUnits(betAmount.toString(), 6);
 
@@ -214,11 +220,24 @@ export default function SlotsPage() {
             
             {/* Balance indicator */}
             {address && (
-              <div className="mb-4 p-2 rounded-lg bg-[var(--bg-card)] text-xs text-[var(--text-muted)] flex justify-between max-w-sm mx-auto">
+              <div className="mb-4 p-2 rounded-lg bg-[var(--bg-card)] text-xs text-[var(--text-muted)] flex justify-between items-center max-w-sm mx-auto">
                 <span>Available Balance</span>
-                <span className="font-mono text-[var(--text-primary)]">${balance.toFixed(2)} USDC</span>
+                <span className="font-mono text-[var(--text-primary)] flex items-center gap-1"><UsdcLogo size={12} />${balance.toFixed(2)} USDC</span>
               </div>
             )}
+
+            {/* Deposit Prompt */}
+            {needsDeposit && (
+              <div className="mb-4 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 max-w-sm mx-auto">
+                <p className="text-sm text-blue-400 font-semibold mb-1">⚡ Deposit USDC to Play</p>
+                <p className="text-xs text-[var(--text-muted)] mb-2">You have {walletBalance.formatted} USDC in your wallet. Deposit to your Casino Bankroll to start betting.</p>
+                <Button size="sm" onClick={() => setShowDepositModal(true)} className="w-full">
+                  <ArrowDownToLine className="w-3 h-3 mr-1" /> Deposit USDC Now
+                </Button>
+              </div>
+            )}
+
+            <WalletModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
 
             <div className="flex flex-col md:flex-row items-center gap-4">
               <div className="flex items-center gap-3 flex-1">

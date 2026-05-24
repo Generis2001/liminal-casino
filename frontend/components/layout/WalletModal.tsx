@@ -10,6 +10,7 @@ import { useTx } from "@/lib/useTx";
 import { USDC_ADDRESS, TREASURY_ADDRESS, ERC20_ABI, TREASURY_ABI } from "@/lib/contracts";
 import { parseUnits } from "viem";
 import { ArrowDownToLine, ArrowUpFromLine, Wallet, Landmark } from "lucide-react";
+import { UsdcLogo } from "@/components/ui/UsdcLogo";
 
 export function WalletModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [tab, setTab] = useState<"deposit" | "withdraw">("deposit");
@@ -110,12 +111,12 @@ export function WalletModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)]/50 flex flex-col items-center justify-center gap-1">
-          <Wallet className="w-5 h-5 text-blue-400 mb-1" />
+          <UsdcLogo size={20} className="mb-1" />
           <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Wallet USDC</span>
           <span className="font-mono font-bold">{walletBalance.formatted}</span>
         </div>
         <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)]/50 flex flex-col items-center justify-center gap-1">
-          <Landmark className="w-5 h-5 text-accent-gold mb-1" />
+          <UsdcLogo size={20} className="mb-1" />
           <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Casino Bankroll</span>
           <span className="font-mono font-bold text-accent-gold">{playerBalance.formatted}</span>
         </div>
