@@ -26,6 +26,13 @@ export default function AdminPage() {
   const { writeContractAsync } = useWriteContract();
   const { send, status, isLoading, error } = useTx();
   
+  const { data: ownerData } = useReadContract({
+    address: TREASURY_ADDRESS,
+    abi: TREASURY_ABI,
+    functionName: "owner",
+  });
+  const contractOwner = ownerData as `0x${string}` | undefined;
+  
   const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
     address: USDC_ADDRESS,
     abi: ERC20_ABI,
@@ -35,8 +42,13 @@ export default function AdminPage() {
   });
   const allowance = allowanceData ?? 0n;
 
+  const isOwner = address && contractOwner && address.toLowerCase() === contractOwner.toLowerCase();
+
   const handleAddBankroll = async () => {
     if (!bankrollAmount || isNaN(Number(bankrollAmount)) || Number(bankrollAmount) <= 0) return;
+    if (!isOwner) throw new Error("You are not the contract owner.");
+    if (Number(bankrollAmount) > walletBalance.value) throw new Error("Insufficient USDC balance in wallet.");
+    
     const amountBigInt = parseUnits(bankrollAmount, 6);
     
     if (allowance < amountBigInt) {
@@ -65,6 +77,8 @@ export default function AdminPage() {
 
   const handleWithdrawBankroll = async () => {
     if (!bankrollAmount || isNaN(Number(bankrollAmount)) || Number(bankrollAmount) <= 0) return;
+    if (!isOwner) throw new Error("You are not the contract owner.");
+    
     const amountBigInt = parseUnits(bankrollAmount, 6);
     
     await send(async () => {
@@ -123,6 +137,12 @@ export default function AdminPage() {
                 <span className="text-[var(--text-muted)]">Your Admin Wallet USDC:</span>
                 <span className="font-mono font-semibold">{walletBalance.formatted}</span>
               </div>
+              {!isOwner && address && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-sm text-red-400">
+                  <AlertTriangle className="w-4 h-4" />
+                  Warning: Connected wallet is not the deployer/owner. Transactions will revert.
+                </div>
+              )}
               <div className="flex gap-4 items-end">
                 <div className="flex-1">
                   <Input 
@@ -135,14 +155,14 @@ export default function AdminPage() {
                 </div>
                 <Button 
                   onClick={handleAddBankroll} 
-                  disabled={!bankrollAmount || isLoading} 
+                  disabled={!bankrollAmount || isLoading || !isOwner} 
                   className="bg-emerald-600 hover:bg-emerald-700"
                 >
                   <ArrowDownToLine className="w-4 h-4 mr-1" /> Inject Bankroll
                 </Button>
                 <Button 
                   onClick={handleWithdrawBankroll} 
-                  disabled={!bankrollAmount || isLoading} 
+                  disabled={!bankrollAmount || isLoading || !isOwner} 
                   variant="secondary"
                 >
                   <ArrowUpFromLine className="w-4 h-4 mr-1" /> Withdraw

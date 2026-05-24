@@ -14,6 +14,7 @@ export const ERC20_ABI = [
 ] as const;
 
 export const TREASURY_ABI = [
+  { inputs: [], name: "owner", outputs: [{ type: "address" }], stateMutability: "view", type: "function" },
   { inputs: [{ name: "amount", type: "uint256" }], name: "deposit", outputs: [], stateMutability: "nonpayable", type: "function" },
   { inputs: [{ name: "amount", type: "uint256" }], name: "withdraw", outputs: [], stateMutability: "nonpayable", type: "function" },
   { inputs: [{ name: "amount", type: "uint256" }], name: "addBankroll", outputs: [], stateMutability: "nonpayable", type: "function" },
