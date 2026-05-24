@@ -25,17 +25,18 @@ export default function TreasuryPage() {
         functionName: "totalBankroll"
       }
     ],
+    query: { refetchInterval: 5000 }
   });
 
   const rawTreasuryBalance = treasuryData?.[0]?.result as bigint | undefined;
   const rawBankroll = treasuryData?.[1]?.result as bigint | undefined;
 
-  const treasuryBalance = rawTreasuryBalance ? Number(formatUnits(rawTreasuryBalance, 6)) : 248500;
-  const bankroll = rawBankroll ? Number(formatUnits(rawBankroll, 6)) : 185000;
+  const treasuryBalance = rawTreasuryBalance !== undefined ? Number(formatUnits(rawTreasuryBalance, 6)) : 0;
+  const bankroll = rawBankroll !== undefined ? Number(formatUnits(rawBankroll, 6)) : 0;
   
   // Simulated revenue and utilization based on real bankroll where possible
-  const revenue24h = Math.floor(treasuryBalance * 0.015) || 3420;
-  const utilization = bankroll > 0 ? ((bankroll - (treasuryBalance * 0.5)) / bankroll * 100) : 34.2;
+  const revenue24h = Math.floor(treasuryBalance * 0.015) || 0;
+  const utilization = bankroll > 0 ? ((bankroll - (treasuryBalance * 0.5)) / bankroll * 100) : 0;
 
   const contracts = [
     { label: "Treasury", addr: TREASURY_ADDRESS },
