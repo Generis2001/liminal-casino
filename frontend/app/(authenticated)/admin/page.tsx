@@ -143,7 +143,7 @@ export default function AdminPage() {
                 <Button 
                   onClick={handleWithdrawBankroll} 
                   disabled={!bankrollAmount || isLoading} 
-                  variant="outline"
+                  variant="secondary"
                 >
                   <ArrowUpFromLine className="w-4 h-4 mr-1" /> Withdraw
                 </Button>

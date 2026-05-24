@@ -16,6 +16,8 @@ export const ERC20_ABI = [
 export const TREASURY_ABI = [
   { inputs: [{ name: "amount", type: "uint256" }], name: "deposit", outputs: [], stateMutability: "nonpayable", type: "function" },
   { inputs: [{ name: "amount", type: "uint256" }], name: "withdraw", outputs: [], stateMutability: "nonpayable", type: "function" },
+  { inputs: [{ name: "amount", type: "uint256" }], name: "addBankroll", outputs: [], stateMutability: "nonpayable", type: "function" },
+  { inputs: [{ name: "amount", type: "uint256" }], name: "withdrawBankroll", outputs: [], stateMutability: "nonpayable", type: "function" },
   { inputs: [{ name: "player", type: "address" }], name: "getPlayerBalance", outputs: [{ type: "uint256" }], stateMutability: "view", type: "function" },
   { inputs: [], name: "getTreasuryBalance", outputs: [{ type: "uint256" }], stateMutability: "view", type: "function" },
   { inputs: [], name: "totalBankroll", outputs: [{ type: "uint256" }], stateMutability: "view", type: "function" },
