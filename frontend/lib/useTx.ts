@@ -36,11 +36,14 @@ export function useTx(): UseTxResult {
         setStatus("confirming");
 
         if (publicClient) {
-          await publicClient.waitForTransactionReceipt({
+          const receipt = await publicClient.waitForTransactionReceipt({
             hash,
             confirmations: 1,
             timeout: 30_000,
           });
+          if (receipt.status === "reverted") {
+            throw new Error("Transaction reverted on-chain");
+          }
         }
 
         setStatus("confirmed");

@@ -8,12 +8,75 @@ import { Badge } from "@/components/ui/Badge";
 import { AnimatedCounter } from "@/components/ui/Counter";
 import { Input } from "@/components/ui/Input";
 import { staggerContainer, staggerItem } from "@/animations/variants";
-import { Shield, Pause, Play, Settings, Plus, AlertTriangle, Lock } from "lucide-react";
+import { Shield, Pause, Play, Settings, Plus, AlertTriangle, Lock, Coins, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { useState } from "react";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { TREASURY_ADDRESS, TREASURY_ABI, USDC_ADDRESS, ERC20_ABI } from "@/lib/contracts";
+import { useTx } from "@/lib/useTx";
+import { parseUnits } from "viem";
+import { useWalletBalance } from "@/lib/useUSDCBalance";
 
 export default function AdminPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [newMarket, setNewMarket] = useState("");
+  const [bankrollAmount, setBankrollAmount] = useState("");
+  
+  const { address } = useAccount();
+  const walletBalance = useWalletBalance();
+  const { writeContractAsync } = useWriteContract();
+  const { send, status, isLoading, error } = useTx();
+  
+  const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: "allowance",
+    args: address ? [address, TREASURY_ADDRESS] : undefined,
+    query: { enabled: !!address }
+  });
+  const allowance = allowanceData ?? 0n;
+
+  const handleAddBankroll = async () => {
+    if (!bankrollAmount || isNaN(Number(bankrollAmount)) || Number(bankrollAmount) <= 0) return;
+    const amountBigInt = parseUnits(bankrollAmount, 6);
+    
+    if (allowance < amountBigInt) {
+      const approveHash = await send(async () => {
+        return writeContractAsync({
+          address: USDC_ADDRESS,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [TREASURY_ADDRESS, amountBigInt],
+        });
+      });
+      if (!approveHash) return;
+      await refetchAllowance();
+    }
+    
+    await send(async () => {
+      return writeContractAsync({
+        address: TREASURY_ADDRESS,
+        abi: TREASURY_ABI,
+        functionName: "addBankroll",
+        args: [amountBigInt],
+      });
+    });
+    setBankrollAmount("");
+  };
+
+  const handleWithdrawBankroll = async () => {
+    if (!bankrollAmount || isNaN(Number(bankrollAmount)) || Number(bankrollAmount) <= 0) return;
+    const amountBigInt = parseUnits(bankrollAmount, 6);
+    
+    await send(async () => {
+      return writeContractAsync({
+        address: TREASURY_ADDRESS,
+        abi: TREASURY_ABI,
+        functionName: "withdrawBankroll",
+        args: [amountBigInt],
+      });
+    });
+    setBankrollAmount("");
+  };
 
   return (
     <PageTransition>
@@ -45,6 +108,48 @@ export default function AdminPage() {
           <Card className="p-4" hover={false}>
             <p className="text-xs text-[var(--text-muted)]">House Edge</p>
             <p className="text-xl font-bold text-accent-gold">2.7%</p>
+          </Card>
+        </motion.div>
+
+        {/* Bankroll Management */}
+        <motion.div variants={staggerItem}>
+          <Card className="p-6 border-accent-gold/20">
+            <div className="flex items-center gap-2 mb-4">
+              <Coins className="w-5 h-5 text-accent-gold" />
+              <h2 className="font-display font-semibold">Treasury Bankroll Liquidity</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-[var(--text-muted)]">Your Admin Wallet USDC:</span>
+                <span className="font-mono font-semibold">{walletBalance.formatted}</span>
+              </div>
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <Input 
+                    label="Amount (USDC)" 
+                    type="number" 
+                    placeholder="0.00" 
+                    value={bankrollAmount} 
+                    onChange={(e) => setBankrollAmount(e.target.value)} 
+                  />
+                </div>
+                <Button 
+                  onClick={handleAddBankroll} 
+                  disabled={!bankrollAmount || isLoading} 
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <ArrowDownToLine className="w-4 h-4 mr-1" /> Inject Bankroll
+                </Button>
+                <Button 
+                  onClick={handleWithdrawBankroll} 
+                  disabled={!bankrollAmount || isLoading} 
+                  variant="outline"
+                >
+                  <ArrowUpFromLine className="w-4 h-4 mr-1" /> Withdraw
+                </Button>
+              </div>
+              {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
+            </div>
           </Card>
         </motion.div>
 
