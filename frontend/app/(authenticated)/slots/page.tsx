@@ -16,7 +16,7 @@ import {
   CASINO_ADDRESS, CASINO_ABI,
 } from "@/lib/contracts";
 import { useTx } from "@/lib/useTx";
-import { useUSDCBalance } from "@/lib/useUSDCBalance";
+import { useUSDCBalance, useGameSettlement } from "@/lib/useUSDCBalance";
 
 const SYMBOLS = ["🍒", "🍋", "🔔", "⭐", "💎", "🍀", "7️⃣", "👑"];
 const SYMBOL_PAYOUTS: Record<string, number> = { "👑": 100, "7️⃣": 50, "💎": 25, "⭐": 10, "🔔": 5, "🍀": 5, "🍋": 3, "🍒": 2 };
@@ -31,20 +31,11 @@ export default function SlotsPage() {
   const [result, setResult] = useState<{ won: boolean; payout: number; message: string } | null>(null);
 
   const { value: balance } = useUSDCBalance();
+  const { handleGameSettlement } = useGameSettlement();
   const { send, status, error: txError, txHash, reset } = useTx();
   const { writeContractAsync } = useWriteContract();
 
-  // Read current USDC allowance for casino contract
-  const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    address: USDC_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: "allowance",
-    args: address ? [address, CASINO_ADDRESS] : undefined,
-    query: { enabled: !!address && CONTRACTS_DEPLOYED },
-  });
-
   const amountInUnits = parseUnits(betAmount.toString(), 6);
-  const needsApproval = CONTRACTS_DEPLOYED && (allowance ?? 0n) < amountInUnits;
 
   const spin = async () => {
     // Demo mode when contracts not deployed
@@ -76,21 +67,8 @@ export default function SlotsPage() {
     setResult(null);
 
     try {
-      // Step 1: Approve if needed
-      if (needsApproval) {
-        await send(() =>
-          writeContractAsync({
-            address: USDC_ADDRESS,
-            abi: ERC20_ABI,
-            functionName: "approve",
-            args: [CASINO_ADDRESS, amountInUnits * 100n], // approve 100x for convenience
-          })
-        );
-        await refetchAllowance();
-      }
-
-      // Step 2: Place bet
-      await send(() =>
+      // Place bet
+      const tx = await send(() =>
         writeContractAsync({
           address: CASINO_ADDRESS,
           abi: CASINO_ABI,
@@ -98,6 +76,10 @@ export default function SlotsPage() {
           args: [amountInUnits],
         })
       );
+
+      if (tx) {
+        await handleGameSettlement(tx);
+      }
 
       // Show simulated visual result (real result from contract event)
       const newReels = [
@@ -260,11 +242,6 @@ export default function SlotsPage() {
               </Button>
             </div>
             
-            {needsApproval && CONTRACTS_DEPLOYED && (
-              <p className="text-xs text-amber-400 mt-3 text-center flex items-center justify-center gap-1">
-                <AlertCircle className="w-3 h-3" /> First spin requires USDC approval
-              </p>
-            )}
             {CONTRACTS_DEPLOYED && betAmount > balance && (
               <p className="text-xs text-red-400 mt-2 text-center">Insufficient USDC balance</p>
             )}

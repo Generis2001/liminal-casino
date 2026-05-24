@@ -16,7 +16,7 @@ import {
   CASINO_ADDRESS, CASINO_ABI,
 } from "@/lib/contracts";
 import { useTx } from "@/lib/useTx";
-import { useUSDCBalance } from "@/lib/useUSDCBalance";
+import { useUSDCBalance, useGameSettlement } from "@/lib/useUSDCBalance";
 import { PlayingCard, Suit, Rank } from "@/components/blackjack/PlayingCard";
 
 const CONTRACTS_DEPLOYED = CASINO_ADDRESS !== "0x0000000000000000000000000000000000000000";
@@ -106,19 +106,11 @@ export default function BlackjackPage() {
   const [ghostBets, setGhostBets] = useState<number[]>(Array(5).fill(0));
 
   const { value: balance } = useUSDCBalance();
+  const { handleGameSettlement } = useGameSettlement();
   const { send, status, error: txError, txHash, reset } = useTx();
   const { writeContractAsync } = useWriteContract();
 
-  const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    address: USDC_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: "allowance",
-    args: address ? [address, CASINO_ADDRESS] : undefined,
-    query: { enabled: !!address && CONTRACTS_DEPLOYED },
-  });
-
   const amountInUnits = parseUnits(betAmount.toString(), 6);
-  const needsApproval = CONTRACTS_DEPLOYED && (allowance ?? 0n) < amountInUnits;
 
   const handlePlay = async () => {
     // Reset table
@@ -142,12 +134,11 @@ export default function BlackjackPage() {
     setIsPlaying(true);
 
     try {
-      if (needsApproval) {
-        await send(() => writeContractAsync({ address: USDC_ADDRESS, abi: ERC20_ABI, functionName: "approve", args: [CASINO_ADDRESS, amountInUnits * 100n] }));
-        await refetchAllowance();
-      }
+      const tx = await send(() => writeContractAsync({ address: CASINO_ADDRESS, abi: CASINO_ABI, functionName: "playBlackjack", args: [amountInUnits] }));
 
-      await send(() => writeContractAsync({ address: CASINO_ADDRESS, abi: CASINO_ABI, functionName: "playBlackjack", args: [amountInUnits] }));
+      if (tx) {
+        await handleGameSettlement(tx);
+      }
 
       // Simulate outcome visual based on contract logic bounds
       finalizeHand(Math.floor(Math.random() * 11) + 12, Math.floor(Math.random() * 11) + 12);

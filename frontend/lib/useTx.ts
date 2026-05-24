@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { usePublicClient, useWalletClient } from "wagmi";
-import { useInvalidateUSDCBalance } from "@/lib/useUSDCBalance";
+import { usePublicClient } from "wagmi";
 
 export type TxStatus = "idle" | "pending" | "confirming" | "confirmed" | "error";
 
@@ -12,28 +11,18 @@ export interface UseTxResult {
   error: string | undefined;
   isLoading: boolean;
   /**
-   * Send a transaction, wait for confirmation, then invalidate USDC balance.
-   * Pass an async function that sends the tx and returns the hash.
+   * Send a transaction and wait for confirmation.
+   * Does NOT handle game settlement, must call handleGameSettlement explicitly.
    */
   send: (txFn: () => Promise<`0x${string}`>) => Promise<`0x${string}` | undefined>;
   reset: () => void;
 }
 
-/**
- * Production-grade transaction wrapper.
- *
- * Usage:
- *   const { send, status, isLoading } = useTx();
- *   const hash = await send(() => writeContractAsync({ ... }));
- *
- * After confirmation the USDC balance is automatically invalidated
- * so the UI updates within ~1 second.
- */
 export function useTx(): UseTxResult {
   const [status, setStatus] = useState<TxStatus>("idle");
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const [error, setError] = useState<string | undefined>();
-  const invalidateBalance = useInvalidateUSDCBalance();
+  const publicClient = usePublicClient();
 
   const send = useCallback(
     async (txFn: () => Promise<`0x${string}`>) => {
@@ -42,21 +31,23 @@ export function useTx(): UseTxResult {
       setStatus("pending");
 
       try {
-        // 1. Submit tx to wallet
         const hash = await txFn();
         setTxHash(hash);
         setStatus("confirming");
 
-        // 2. Wait for on-chain confirmation then invalidate balance
-        // invalidateBalance() awaits waitForTransactionReceipt internally
-        await invalidateBalance(hash);
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({
+            hash,
+            confirmations: 1,
+            timeout: 30_000,
+          });
+        }
 
         setStatus("confirmed");
         return hash;
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Transaction failed";
-        // User rejected
         if (
           message.includes("rejected") ||
           message.includes("denied") ||
@@ -70,7 +61,7 @@ export function useTx(): UseTxResult {
         return undefined;
       }
     },
-    [invalidateBalance]
+    [publicClient]
   );
 
   const reset = useCallback(() => {
@@ -88,3 +79,4 @@ export function useTx(): UseTxResult {
     reset,
   };
 }
+

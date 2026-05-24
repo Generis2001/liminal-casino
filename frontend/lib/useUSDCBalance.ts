@@ -2,73 +2,53 @@
 
 import {
   useAccount,
-  useReadContract,
   useBlockNumber,
   usePublicClient,
 } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback, useRef } from "react";
 import { formatUnits } from "viem";
 import { USDC_ADDRESS, ERC20_ABI } from "@/lib/contracts";
 import { arcTestnet } from "@/lib/arcChain";
 
 // Stable query key — used everywhere to invalidate the USDC balance cache
-export function usdcBalanceQueryKey(address: `0x${string}` | undefined) {
-  return [
-    "readContract",
-    {
-      address: USDC_ADDRESS,
-      functionName: "balanceOf",
-      args: [address],
-      chainId: arcTestnet.id,
-    },
-  ] as const;
-}
+export const usdcBalanceQueryKey = (address: string) => [
+  "usdcBalance",
+  address
+];
 
 export interface USDCBalance {
-  /** Raw BigInt value from contract */
   raw: bigint;
-  /** Formatted number (6 decimals) */
   value: number;
-  /** Display string e.g. "1,234.56" */
   formatted: string;
-  /** True while fetching after a tx */
   isPending: boolean;
-  /** True on initial load */
   isLoading: boolean;
-  /** Manually trigger a refetch */
   refetch: () => void;
 }
 
-/**
- * Production-grade USDC balance hook.
- *
- * Features:
- * - Reads `balanceOf()` directly from the ERC-20 contract (not native balance)
- * - Re-fetches on every new block (via `watch: true`) for ~1s sync
- * - Deduplicated — same query key, so all consumers share one subscription
- * - Exposes `refetch` for instant post-tx invalidation
- */
 export function useUSDCBalance(): USDCBalance {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
 
   const {
     data: rawBalance,
     isLoading,
     isFetching,
     refetch,
-  } = useReadContract({
-    address: USDC_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-      // Consider data stale immediately so any invalidation triggers a refetch
-      staleTime: 0,
-      // Force aggressive sub-second polling to ensure updates < 1s
-      refetchInterval: 800,
+  } = useQuery({
+    queryKey: address ? usdcBalanceQueryKey(address) : ["usdcBalance", "undefined"],
+    queryFn: async () => {
+      if (!address || !publicClient) return 0n;
+      return publicClient.readContract({
+        address: USDC_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "balanceOf",
+        args: [address],
+      });
     },
+    enabled: !!address && !!publicClient,
+    staleTime: 0,
+    refetchInterval: 800,
   });
 
   const raw = rawBalance ?? 0n;
@@ -88,10 +68,6 @@ export function useUSDCBalance(): USDCBalance {
   };
 }
 
-/**
- * Watches new blocks and refetches USDC balance within ~1 block of any change.
- * Mount this once at the app root (BalanceSyncProvider).
- */
 export function useUSDCBlockSync() {
   const { address } = useAccount();
   const queryClient = useQueryClient();
@@ -105,30 +81,27 @@ export function useUSDCBlockSync() {
 
   useEffect(() => {
     if (!address || blockNumber === undefined) return;
-    // Only refetch on genuinely new blocks, not re-renders
     if (prevBlockRef.current === blockNumber) return;
     prevBlockRef.current = blockNumber;
 
     queryClient.invalidateQueries({
-      queryKey: ["readContract", { address: USDC_ADDRESS, functionName: "balanceOf" }],
+      queryKey: usdcBalanceQueryKey(address),
     });
   }, [blockNumber, address, queryClient]);
 }
 
 /**
- * Call this after any transaction that spends or receives USDC.
- * Immediately invalidates the cache → wagmi refetches from chain.
+ * Unified post-game settlement handler
  */
-export function useInvalidateUSDCBalance() {
+export function useGameSettlement() {
   const { address } = useAccount();
   const queryClient = useQueryClient();
   const publicClient = usePublicClient();
 
-  return useCallback(
+  const handleGameSettlement = useCallback(
     async (txHash?: `0x${string}`) => {
       if (!address) return;
 
-      // If we have a hash, wait for the receipt first (confirmed = onchain)
       if (txHash && publicClient) {
         try {
           await publicClient.waitForTransactionReceipt({
@@ -137,15 +110,19 @@ export function useInvalidateUSDCBalance() {
             timeout: 30_000,
           });
         } catch {
-          // Timeout or error — still try to refetch
+          // Ignore timeout
         }
       }
 
-      // Invalidate specifically the balanceOf query for USDC
-      queryClient.invalidateQueries({
-        queryKey: ["readContract", { address: USDC_ADDRESS, functionName: "balanceOf" }],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: usdcBalanceQueryKey(address) }),
+        queryClient.invalidateQueries({ queryKey: ["playerBalance"] }),
+        queryClient.invalidateQueries({ queryKey: ["gameState"] })
+      ]);
     },
     [address, queryClient, publicClient]
   );
+
+  return { handleGameSettlement };
 }
+

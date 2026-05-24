@@ -17,7 +17,7 @@ import {
   CASINO_ADDRESS, CASINO_ABI,
 } from "@/lib/contracts";
 import { useTx } from "@/lib/useTx";
-import { useUSDCBalance } from "@/lib/useUSDCBalance";
+import { useUSDCBalance, useGameSettlement } from "@/lib/useUSDCBalance";
 
 const ROULETTE_NUMBERS = Array.from({ length: 37 }, (_, i) => i);
 const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
@@ -47,20 +47,11 @@ export default function RoulettePage() {
   const [history, setHistory] = useState<number[]>([17, 0, 32, 15, 4, 21, 2, 25, 36, 8]);
 
   const { value: balance } = useUSDCBalance();
+  const { handleGameSettlement } = useGameSettlement();
   const { send, status, error: txError, txHash, reset } = useTx();
   const { writeContractAsync } = useWriteContract();
 
-  // Read current USDC allowance for casino contract
-  const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    address: USDC_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: "allowance",
-    args: address ? [address, CASINO_ADDRESS] : undefined,
-    query: { enabled: !!address && CONTRACTS_DEPLOYED },
-  });
-
   const amountInUnits = parseUnits(betAmount.toString(), 6);
-  const needsApproval = CONTRACTS_DEPLOYED && (allowance ?? 0n) < amountInUnits;
 
   const handleSpin = async () => {
     if (!selectedBet && selectedNumber === null) return;
@@ -82,25 +73,10 @@ export default function RoulettePage() {
     setResult(null);
 
     try {
-      // Step 1: Approve if needed
-      if (needsApproval) {
-        await send(() =>
-          writeContractAsync({
-            address: USDC_ADDRESS,
-            abi: ERC20_ABI,
-            functionName: "approve",
-            args: [CASINO_ADDRESS, amountInUnits * 100n], // approve 100x for convenience
-          })
-        );
-        await refetchAllowance();
-      }
-
-      // Step 2: Place bet — calls playRoulette(betType, choice, amount)
-      // betType: from selected bet type; choice: number if straight bet, else 0
       const betType = selectedNumber !== null ? 0 : selectedBet!.value;
       const choice = selectedNumber !== null ? BigInt(selectedNumber) : 0n;
 
-      await send(() =>
+      const tx = await send(() =>
         writeContractAsync({
           address: CASINO_ADDRESS,
           abi: CASINO_ABI,
@@ -108,6 +84,10 @@ export default function RoulettePage() {
           args: [betType, choice, amountInUnits],
         })
       );
+
+      if (tx) {
+        await handleGameSettlement(tx);
+      }
 
       // Show simulated result (real result from contract event)
       const r = Math.floor(Math.random() * 37);
@@ -287,12 +267,6 @@ export default function RoulettePage() {
 
               {selectedNumber !== null && (
                 <p className="text-xs text-accent-gold mb-3">Straight bet on {selectedNumber} — 36x payout</p>
-              )}
-
-              {needsApproval && CONTRACTS_DEPLOYED && (
-                <p className="text-xs text-amber-400 mb-2 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> First spin requires USDC approval
-                </p>
               )}
 
               <Button
