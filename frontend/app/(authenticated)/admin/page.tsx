@@ -138,9 +138,16 @@ export default function AdminPage() {
                 <span className="font-mono font-semibold">{walletBalance.formatted}</span>
               </div>
               {isWrongOwner && address && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-sm text-red-400">
-                  <AlertTriangle className="w-4 h-4" />
-                  Warning: Connected wallet is not the deployer/owner. Transactions will revert.
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex flex-col gap-2 text-sm text-red-400">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="font-semibold">Warning: Connected wallet is not the deployer/owner.</span>
+                  </div>
+                  <div className="text-xs space-y-1 ml-6 text-[var(--text-muted)]">
+                    <div><span className="text-[var(--text-secondary)]">Connected:</span> {address}</div>
+                    <div><span className="text-[var(--text-secondary)]">Required (Owner):</span> {contractOwner}</div>
+                    <div className="text-red-400/80 mt-1">Please connect the exact Required wallet above, or update the TREASURY_ADDRESS in your frontend if it is pointing to an old contract.</div>
+                  </div>
                 </div>
               )}
               <div className="flex gap-4 items-end">
