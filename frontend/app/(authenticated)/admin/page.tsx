@@ -42,11 +42,11 @@ export default function AdminPage() {
   });
   const allowance = allowanceData ?? 0n;
 
-  const isOwner = address && contractOwner && address.toLowerCase() === contractOwner.toLowerCase();
+  const isWrongOwner = address && contractOwner ? address.toLowerCase() !== contractOwner.toLowerCase() : false;
 
   const handleAddBankroll = async () => {
     if (!bankrollAmount || isNaN(Number(bankrollAmount)) || Number(bankrollAmount) <= 0) return;
-    if (!isOwner) throw new Error("You are not the contract owner.");
+    if (isWrongOwner) throw new Error("You are not the contract owner.");
     if (Number(bankrollAmount) > walletBalance.value) throw new Error("Insufficient USDC balance in wallet.");
     
     const amountBigInt = parseUnits(bankrollAmount, 6);
@@ -77,7 +77,7 @@ export default function AdminPage() {
 
   const handleWithdrawBankroll = async () => {
     if (!bankrollAmount || isNaN(Number(bankrollAmount)) || Number(bankrollAmount) <= 0) return;
-    if (!isOwner) throw new Error("You are not the contract owner.");
+    if (isWrongOwner) throw new Error("You are not the contract owner.");
     
     const amountBigInt = parseUnits(bankrollAmount, 6);
     
@@ -137,7 +137,7 @@ export default function AdminPage() {
                 <span className="text-[var(--text-muted)]">Your Admin Wallet USDC:</span>
                 <span className="font-mono font-semibold">{walletBalance.formatted}</span>
               </div>
-              {!isOwner && address && (
+              {isWrongOwner && address && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-sm text-red-400">
                   <AlertTriangle className="w-4 h-4" />
                   Warning: Connected wallet is not the deployer/owner. Transactions will revert.
@@ -155,14 +155,14 @@ export default function AdminPage() {
                 </div>
                 <Button 
                   onClick={handleAddBankroll} 
-                  disabled={!bankrollAmount || isLoading || !isOwner} 
+                  disabled={!bankrollAmount || isLoading || isWrongOwner} 
                   className="bg-emerald-600 hover:bg-emerald-700"
                 >
                   <ArrowDownToLine className="w-4 h-4 mr-1" /> Inject Bankroll
                 </Button>
                 <Button 
                   onClick={handleWithdrawBankroll} 
-                  disabled={!bankrollAmount || isLoading || !isOwner} 
+                  disabled={!bankrollAmount || isLoading || isWrongOwner} 
                   variant="secondary"
                 >
                   <ArrowUpFromLine className="w-4 h-4 mr-1" /> Withdraw
