@@ -124,11 +124,13 @@ contract LiminalCasino {
         });
         playerBetHistory[msg.sender].push(betId);
         
-        // Send payout if won
+        // Send payout if won, otherwise return bet to bankroll
         if (won && payout > 0) {
             treasury.sendPayout(msg.sender, payout, "roulette");
+        } else {
+            treasury.settleLoss(msg.sender, amount, "roulette");
         }
-        
+
         // Update stats
         _updateStats(msg.sender, won, amount, payout);
         
@@ -241,11 +243,13 @@ contract LiminalCasino {
             payout: payout
         });
         playerBetHistory[msg.sender].push(betId);
-        
+
         if (payout > 0) {
             treasury.sendPayout(msg.sender, payout, "blackjack");
+        } else {
+            treasury.settleLoss(msg.sender, amount, "blackjack");
         }
-        
+
         _updateStats(msg.sender, won, amount, payout);
         
         emit BetPlaced(betId, msg.sender, GameType.Blackjack, amount);
@@ -302,11 +306,13 @@ contract LiminalCasino {
             payout: payout
         });
         playerBetHistory[msg.sender].push(betId);
-        
+
         if (won && payout > 0) {
             treasury.sendPayout(msg.sender, payout, "slots");
+        } else {
+            treasury.settleLoss(msg.sender, amount, "slots");
         }
-        
+
         _updateStats(msg.sender, won, amount, payout);
         
         emit BetPlaced(betId, msg.sender, GameType.Slots, amount);
