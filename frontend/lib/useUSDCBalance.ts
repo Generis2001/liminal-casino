@@ -34,20 +34,29 @@ export function useUSDCBalance(): USDCBalance {
     isLoading,
     isFetching,
     refetch,
+    error,
   } = useQuery({
     queryKey: address ? usdcBalanceQueryKey(address) : ["usdcBalance", "undefined"],
     queryFn: async () => {
       if (!address || !publicClient) return 0n;
-      return publicClient.readContract({
-        address: TREASURY_ADDRESS,
-        abi: TREASURY_ABI,
-        functionName: "getPlayerBalance",
-        args: [address],
-      });
+      try {
+        const balance = await publicClient.readContract({
+          address: TREASURY_ADDRESS,
+          abi: TREASURY_ABI,
+          functionName: "getPlayerBalance",
+          args: [address],
+        });
+        return balance as bigint;
+      } catch (err) {
+        console.error("Error fetching player balance:", err);
+        return 0n;
+      }
     },
     enabled: !!address && !!publicClient,
     staleTime: 0,
     refetchInterval: 800,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const raw = rawBalance ?? 0n;
@@ -77,20 +86,29 @@ export function useWalletBalance(): USDCBalance {
     isLoading,
     isFetching,
     refetch,
+    error,
   } = useQuery({
     queryKey: address ? walletBalanceQueryKey(address) : ["walletBalance", "undefined"],
     queryFn: async () => {
       if (!address || !publicClient) return 0n;
-      return publicClient.readContract({
-        address: USDC_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: "balanceOf",
-        args: [address],
-      });
+      try {
+        const balance = await publicClient.readContract({
+          address: USDC_ADDRESS,
+          abi: ERC20_ABI,
+          functionName: "balanceOf",
+          args: [address],
+        });
+        return balance as bigint;
+      } catch (err) {
+        console.error("Error fetching wallet balance:", err);
+        return 0n;
+      }
     },
     enabled: !!address && !!publicClient,
     staleTime: 0,
     refetchInterval: 800,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const raw = rawBalance ?? 0n;
