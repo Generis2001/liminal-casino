@@ -13,7 +13,7 @@ import { TREASURY_ADDRESS, TREASURY_ABI, CASINO_ADDRESS, PREDICTION_ADDRESS, REW
 import { formatUnits } from "viem";
 
 export default function TreasuryPage() {
-  const { data: treasuryData } = useReadContracts({
+  const { data: treasuryData, isLoading } = useReadContracts({
     contracts: [
       {
         address: TREASURY_ADDRESS,
@@ -32,12 +32,14 @@ export default function TreasuryPage() {
   const rawTreasuryBalance = treasuryData?.[0]?.result as bigint | undefined;
   const rawBankroll = treasuryData?.[1]?.result as bigint | undefined;
 
-  const treasuryBalance = rawTreasuryBalance !== undefined ? Number(formatUnits(rawTreasuryBalance, 6)) : 0;
-  const bankroll = rawBankroll !== undefined ? Number(formatUnits(rawBankroll, 6)) : 0;
-  
+  const treasuryBalance = rawTreasuryBalance !== undefined ? Number(formatUnits(rawTreasuryBalance, 6)) : null;
+  const bankroll = rawBankroll !== undefined ? Number(formatUnits(rawBankroll, 6)) : null;
+
   // Simulated revenue and utilization based on real bankroll where possible
-  const revenue24h = Math.floor(treasuryBalance * 0.015) || 0;
-  const utilization = bankroll > 0 ? ((bankroll - (treasuryBalance * 0.5)) / bankroll * 100) : 0;
+  const revenue24h = treasuryBalance !== null ? Math.floor(treasuryBalance * 0.015) : 0;
+  const utilization = bankroll !== null && bankroll > 0 && treasuryBalance !== null
+    ? ((bankroll - (treasuryBalance * 0.5)) / bankroll * 100)
+    : 0;
 
   const contracts = [
     { label: "Treasury", addr: TREASURY_ADDRESS },
@@ -62,12 +64,20 @@ export default function TreasuryPage() {
           <Card className="p-5" hover={false}>
             <UsdcLogo size={20} className="mb-2" />
             <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Total Balance</p>
-            <AnimatedCounter value={treasuryBalance} prefix="$" decimals={0} className="text-2xl font-bold font-display text-[var(--text-primary)]" />
+            {treasuryBalance !== null ? (
+              <AnimatedCounter value={treasuryBalance} prefix="$" decimals={0} className="text-2xl font-bold font-display text-[var(--text-primary)]" />
+            ) : (
+              <div className="text-2xl font-bold font-display text-[var(--text-muted)]">Loading...</div>
+            )}
           </Card>
           <Card className="p-5" hover={false}>
             <UsdcLogo size={20} className="mb-2" />
             <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Bankroll</p>
-            <AnimatedCounter value={bankroll} prefix="$" decimals={0} className="text-2xl font-bold font-display text-blue-400" />
+            {bankroll !== null ? (
+              <AnimatedCounter value={bankroll} prefix="$" decimals={0} className="text-2xl font-bold font-display text-blue-400" />
+            ) : (
+              <div className="text-2xl font-bold font-display text-[var(--text-muted)]">Loading...</div>
+            )}
           </Card>
           <Card className="p-5" hover={false}>
             <TrendingUp className="w-5 h-5 text-emerald-400 mb-2" />
@@ -86,15 +96,15 @@ export default function TreasuryPage() {
             <h2 className="font-display font-semibold mb-4">Bankroll Health</h2>
             <div className="space-y-4">
               <div>
-                <div className="flex justify-between text-sm mb-1"><span className="text-[var(--text-secondary)]">Max Exposure (10%)</span><span className="font-mono">${(bankroll * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>
+                <div className="flex justify-between text-sm mb-1"><span className="text-[var(--text-secondary)]">Max Exposure (10%)</span><span className="font-mono">${bankroll !== null ? (bankroll * 0.1).toLocaleString(undefined, { maximumFractionDigits: 0 }) : '...'}</span></div>
                 <div className="h-2 rounded-full bg-[var(--bg-card)] overflow-hidden"><motion.div className="h-full rounded-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: "34%" }} transition={{ duration: 1 }} /></div>
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-1"><span className="text-[var(--text-secondary)]">Active Bets</span><span className="font-mono">${(bankroll * 0.05).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>
+                <div className="flex justify-between text-sm mb-1"><span className="text-[var(--text-secondary)]">Active Bets</span><span className="font-mono">${bankroll !== null ? (bankroll * 0.05).toLocaleString(undefined, { maximumFractionDigits: 0 }) : '...'}</span></div>
                 <div className="h-2 rounded-full bg-[var(--bg-card)] overflow-hidden"><motion.div className="h-full rounded-full bg-blue-500" initial={{ width: 0 }} animate={{ width: "15%" }} transition={{ duration: 1 }} /></div>
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-1"><span className="text-[var(--text-secondary)]">Reward Pool</span><span className="font-mono">${(treasuryBalance * 0.05).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>
+                <div className="flex justify-between text-sm mb-1"><span className="text-[var(--text-secondary)]">Reward Pool</span><span className="font-mono">${treasuryBalance !== null ? (treasuryBalance * 0.05).toLocaleString(undefined, { maximumFractionDigits: 0 }) : '...'}</span></div>
                 <div className="h-2 rounded-full bg-[var(--bg-card)] overflow-hidden"><motion.div className="h-full rounded-full bg-accent-gold" initial={{ width: 0 }} animate={{ width: "52%" }} transition={{ duration: 1 }} /></div>
               </div>
             </div>
