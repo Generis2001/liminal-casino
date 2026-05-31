@@ -124,7 +124,7 @@ export default function BlackjackPage() {
     setPlayerCards([]);
     setDealerCards([]);
     setGhostCards(Array(5).fill([]));
-    
+
     // Ghost players place bets
     setGhostBets(Array(5).fill(0).map(() => [5, 10, 25, 50, 100, 250][Math.floor(Math.random() * 6)]));
 
@@ -134,6 +134,12 @@ export default function BlackjackPage() {
         Math.floor(Math.random() * 11) + 12,
         Math.floor(Math.random() * 11) + 12
       ), 2000);
+      return;
+    }
+
+    // Check if player has sufficient balance
+    if (balance < betAmount) {
+      alert(`Insufficient balance. You have $${balance.toFixed(2)} USDC but need $${betAmount} USDC. Please deposit first.`);
       return;
     }
 

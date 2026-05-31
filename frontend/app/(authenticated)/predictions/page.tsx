@@ -15,7 +15,7 @@ import {
   PREDICTION_ADDRESS, PREDICTION_ABI,
 } from "@/lib/contracts";
 import { useTx } from "@/lib/useTx";
-import { useUSDCBalance } from "@/lib/useUSDCBalance";
+import { useUSDCBalance, useWalletBalance } from "@/lib/useUSDCBalance";
 
 const DEMO_MARKETS = [
   { id: 0n, description: "ETH will reach $5,000 by end of Q2 2026", deadline: 1782777600n, settleTime: 0n, status: 0, yesPool: 15000000000n, noPool: 8500000000n, outcome: 0, totalParticipants: 45n },
@@ -42,7 +42,7 @@ export default function PredictionsPage() {
   const [stake, setStake] = useState(10);
   const [isPlacing, setIsPlacing] = useState(false);
 
-  const { value: balance } = useUSDCBalance();
+  const { value: balance } = useWalletBalance();
   const { send, status: txStatus, error: txError, txHash, reset } = useTx();
   const { writeContractAsync } = useWriteContract();
 

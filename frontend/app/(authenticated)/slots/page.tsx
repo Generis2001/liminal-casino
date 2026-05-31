@@ -69,6 +69,12 @@ export default function SlotsPage() {
       return;
     }
 
+    // Check if player has sufficient balance
+    if (balance < betAmount) {
+      alert(`Insufficient balance. You have $${balance.toFixed(2)} USDC but need $${betAmount} USDC. Please deposit first.`);
+      return;
+    }
+
     setIsSpinning(true);
     setResult(null);
 
@@ -94,7 +100,7 @@ export default function SlotsPage() {
         SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
       ];
       setReels(newReels);
-      
+
       if (newReels[0] === newReels[1] && newReels[1] === newReels[2]) {
         const mult = SYMBOL_PAYOUTS[newReels[0]] || 5;
         setResult({ won: true, payout: betAmount * mult, message: `Three of a kind! ${mult}x` });

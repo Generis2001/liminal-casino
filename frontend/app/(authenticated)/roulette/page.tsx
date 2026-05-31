@@ -76,6 +76,12 @@ export default function RoulettePage() {
       return;
     }
 
+    // Check if player has sufficient balance
+    if (balance < betAmount) {
+      alert(`Insufficient balance. You have $${balance.toFixed(2)} USDC but need $${betAmount} USDC. Please deposit first.`);
+      return;
+    }
+
     setIsSpinning(true);
     setResult(null);
 
